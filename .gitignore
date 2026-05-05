@@ -1,0 +1,16 @@
+# Gradle 缓存与构建文件
+.gradle/
+/build/
+*/build/
+# 本地配置文件 (每个人的电脑路径不同，绝对不能提交)
+local.properties
+# Android Studio 配置文件
+.idea/
+*.iml
+*.iws
+# 签名文件与密钥 (安全防泄漏)
+*.jks
+*.keystore
+# Mac/Windows
+.DS_Store
+Thumbs.db
