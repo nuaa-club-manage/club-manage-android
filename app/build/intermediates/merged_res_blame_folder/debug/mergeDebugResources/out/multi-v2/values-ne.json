@@ -4,7 +4,7 @@
             "outputFile": "com.clubmgmt.app-mergeDebugResources-51:/values-ne/values-ne.xml",
             "map": [
                 {
-                    "source": "C:\\Users\\86135\\.gradle\\caches\\transforms-4\\5abbc4c23e3ab15f7a3ddaae868d351e\\transformed\\material3-release\\res\\values-ne\\values-ne.xml",
+                    "source": "C:\\Users\\ROG\\.gradle\\caches\\transforms-4\\5abbc4c23e3ab15f7a3ddaae868d351e\\transformed\\material3-release\\res\\values-ne\\values-ne.xml",
                     "from": {
                         "startLines": "2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57",
                         "startColumns": "4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4",
@@ -21,7 +21,7 @@
                     }
                 },
                 {
-                    "source": "C:\\Users\\86135\\.gradle\\caches\\transforms-4\\4cc74d00f91d8eaa2e9aeff9b4f2d725\\transformed\\core-1.13.1\\res\\values-ne\\values-ne.xml",
+                    "source": "C:\\Users\\ROG\\.gradle\\caches\\transforms-4\\4cc74d00f91d8eaa2e9aeff9b4f2d725\\transformed\\core-1.13.1\\res\\values-ne\\values-ne.xml",
                     "from": {
                         "startLines": "2,3,4,5,6,7,8,9",
                         "startColumns": "4,4,4,4,4,4,4,4",
@@ -38,7 +38,7 @@
                     }
                 },
                 {
-                    "source": "C:\\Users\\86135\\.gradle\\caches\\transforms-4\\1c4d2c01150d04cac65ffeb433844d69\\transformed\\foundation-release\\res\\values-ne\\values-ne.xml",
+                    "source": "C:\\Users\\ROG\\.gradle\\caches\\transforms-4\\1c4d2c01150d04cac65ffeb433844d69\\transformed\\foundation-release\\res\\values-ne\\values-ne.xml",
                     "from": {
                         "startLines": "2,3",
                         "startColumns": "4,4",
@@ -55,7 +55,7 @@
                     }
                 },
                 {
-                    "source": "C:\\Users\\86135\\.gradle\\caches\\transforms-4\\0f199809f8f5ded887fcfac0cad3de82\\transformed\\ui-release\\res\\values-ne\\values-ne.xml",
+                    "source": "C:\\Users\\ROG\\.gradle\\caches\\transforms-4\\0f199809f8f5ded887fcfac0cad3de82\\transformed\\ui-release\\res\\values-ne\\values-ne.xml",
                     "from": {
                         "startLines": "2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18",
                         "startColumns": "4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4",

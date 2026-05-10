@@ -19,10 +19,10 @@ data class CaptchaResponse(
 )
 
 data class LoginRequest(
-    @SerializedName("userID")
+    @SerializedName("userId")
     val userID: String,
     @SerializedName("loginType")
-    val loginType: String,
+    val loginType: Int,
     @SerializedName("userPassword")
     val userPassword: String,
     @SerializedName("contact")
@@ -33,11 +33,6 @@ data class LoginRequest(
     val captchaId: String,
     @SerializedName("captchaCode")
     val captchaCode: String
-)
-
-data class SendCodeRequest(
-    @SerializedName("contact")
-    val contact: String
 )
 
 data class SendCodeResponse(

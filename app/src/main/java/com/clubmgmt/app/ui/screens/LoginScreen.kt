@@ -33,7 +33,6 @@ import com.clubmgmt.app.data.SessionManager
 import com.clubmgmt.app.data.api.CaptchaResponse
 import com.clubmgmt.app.data.api.LoginRequest
 import com.clubmgmt.app.data.api.RetrofitClient
-import com.clubmgmt.app.data.api.SendCodeRequest
 import com.clubmgmt.app.ui.theme.Indigo600
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
@@ -94,7 +93,7 @@ fun LoginScreen(
         }
         scope.launch {
             try {
-                val response = RetrofitClient.instance.sendCode(SendCodeRequest(contact))
+                val response = RetrofitClient.instance.sendCode(contact)
                 if (response.isSuccessful) {
                     val body = response.body()
                     if (body != null && body.code == 200) {
@@ -141,7 +140,7 @@ fun LoginScreen(
         val request = if (isPasswordLogin) {
             LoginRequest(
                 userID = userID,
-                loginType = "0",
+                loginType = 0,
                 userPassword = userPassword,
                 contact = "",
                 verifyCode = "",
@@ -151,7 +150,7 @@ fun LoginScreen(
         } else {
             LoginRequest(
                 userID = "",
-                loginType = "1",
+                loginType = 1,
                 userPassword = "",
                 contact = contact,
                 verifyCode = verifyCode,

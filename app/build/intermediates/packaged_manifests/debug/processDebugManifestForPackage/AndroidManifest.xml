@@ -23,6 +23,7 @@
         android:extractNativeLibs="false"
         android:label="社团管理"
         android:supportsRtl="true"
+        android:testOnly="true"
         android:theme="@style/Theme.ClubManagement"
         android:usesCleartextTraffic="true" >
         <activity
