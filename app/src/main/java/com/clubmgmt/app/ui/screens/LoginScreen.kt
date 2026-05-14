@@ -30,10 +30,10 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import com.clubmgmt.app.data.SessionManager
+import com.clubmgmt.app.data.api.AdminLoginRequest
 import com.clubmgmt.app.data.api.CaptchaResponse
 import com.clubmgmt.app.data.api.LoginRequest
 import com.clubmgmt.app.data.api.RetrofitClient
-import com.clubmgmt.app.data.api.SendCodeRequest
 import com.clubmgmt.app.ui.theme.Indigo600
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
@@ -94,7 +94,7 @@ fun LoginScreen(
         }
         scope.launch {
             try {
-                val response = RetrofitClient.instance.sendCode(SendCodeRequest(contact))
+                val response = RetrofitClient.instance.sendCode(contact)
                 if (response.isSuccessful) {
                     val body = response.body()
                     if (body != null && body.code == 200) {
@@ -120,6 +120,43 @@ fun LoginScreen(
 
     // 执行登录
     fun doLogin() {
+        // 管理员登录：不需要验证码，使用独立接口
+        if (isAdminLogin) {
+            if (userID.isBlank() || userPassword.isBlank()) {
+                scope.launch { snackbarHostState.showSnackbar("请输入管理员账号和密码") }
+                return
+            }
+            scope.launch {
+                isLoading = true
+                loadingText = "管理员登录中..."
+                try {
+                    val response = RetrofitClient.instance.adminLogin(
+                        AdminLoginRequest(userId = userID, userPassword = userPassword)
+                    )
+                    isLoading = false
+                    if (response.isSuccessful) {
+                        val body = response.body()
+                        if (body != null && body.code == 200) {
+                            SessionManager.token = body.data
+                            SessionManager.userId = userID
+                            SessionManager.userRole = "ADMIN"
+                            snackbarHostState.showSnackbar(body.message)
+                            onNavigateAdmin()
+                        } else {
+                            snackbarHostState.showSnackbar(body?.message ?: "管理员登录失败")
+                        }
+                    } else {
+                        snackbarHostState.showSnackbar("管理员登录失败 (${response.code()})")
+                    }
+                } catch (_: Exception) {
+                    isLoading = false
+                    snackbarHostState.showSnackbar("网络错误，请稍后重试")
+                }
+            }
+            return
+        }
+
+        // 普通用户登录：需要图形验证码
         if (captchaCode.isBlank()) {
             scope.launch { snackbarHostState.showSnackbar("请输入图形验证码") }
             return
@@ -140,8 +177,8 @@ fun LoginScreen(
 
         val request = if (isPasswordLogin) {
             LoginRequest(
-                userID = userID,
-                loginType = "0",
+                userId = userID,
+                loginType = 0,
                 userPassword = userPassword,
                 contact = "",
                 verifyCode = "",
@@ -150,8 +187,8 @@ fun LoginScreen(
             )
         } else {
             LoginRequest(
-                userID = "",
-                loginType = "1",
+                userId = "",
+                loginType = 1,
                 userPassword = "",
                 contact = contact,
                 verifyCode = verifyCode,
@@ -171,9 +208,9 @@ fun LoginScreen(
                     if (body != null && body.code == 200) {
                         SessionManager.token = body.data
                         SessionManager.userId = if (isPasswordLogin) userID else contact
-                        SessionManager.userRole = if (isAdminLogin) "ADMIN" else "USER"
+                        SessionManager.userRole = "USER"
                         snackbarHostState.showSnackbar(body.message)
-                        if (isAdminLogin) onNavigateAdmin() else onLoginSuccess()
+                        onLoginSuccess()
                     } else {
                         snackbarHostState.showSnackbar(body?.message ?: "登录失败")
                         loadCaptcha()
@@ -325,38 +362,40 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // 图形验证码
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                OutlinedTextField(
-                    value = captchaCode,
-                    onValueChange = { captchaCode = it },
-                    label = { Text("图形验证码") },
-                    modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(12.dp),
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done)
-                )
-                Spacer(modifier = Modifier.width(12.dp))
-                Box(
-                    modifier = Modifier
-                        .width(100.dp)
-                        .height(56.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(MaterialTheme.colorScheme.surfaceVariant)
-                        .clickable { loadCaptcha() },
-                    contentAlignment = Alignment.Center
+            // 图形验证码（管理员登录时不需要）
+            if (!isAdminLogin) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    val text = captchaData?.data?.captchaText
-                    if (text != null) {
-                        CaptchaCanvas(text = text)
-                    } else {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(24.dp),
-                            strokeWidth = 2.dp
-                        )
+                    OutlinedTextField(
+                        value = captchaCode,
+                        onValueChange = { captchaCode = it },
+                        label = { Text("图形验证码") },
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(12.dp),
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done)
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Box(
+                        modifier = Modifier
+                            .width(100.dp)
+                            .height(56.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(MaterialTheme.colorScheme.surfaceVariant)
+                            .clickable { loadCaptcha() },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        val text = captchaData?.data?.captchaText
+                        if (text != null) {
+                            CaptchaCanvas(text = text)
+                        } else {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(24.dp),
+                                strokeWidth = 2.dp
+                            )
+                        }
                     }
                 }
             }

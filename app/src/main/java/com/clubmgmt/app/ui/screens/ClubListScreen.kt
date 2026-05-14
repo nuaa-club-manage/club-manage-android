@@ -8,25 +8,53 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.clubmgmt.app.data.mockClubs
+import com.clubmgmt.app.data.api.RetrofitClient
+import com.clubmgmt.app.data.toClub
 import com.clubmgmt.app.ui.components.ClubCard
-import com.clubmgmt.app.ui.components.FilterChipRow
+import kotlinx.coroutines.launch
 
 @Composable
 fun ClubListScreen(
-    onClubClick: (Int) -> Unit
+    onClubClick: (String) -> Unit
 ) {
-    val categories = remember { mockClubs.map { it.category }.distinct() }
     var searchQuery by remember { mutableStateOf("") }
-    var selectedCategory by remember { mutableStateOf("所有分类") }
+    var clubs by remember { mutableStateOf<List<com.clubmgmt.app.data.Club>>(null) }
+    var isLoading by remember { mutableStateOf(true) }
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
 
-    val filteredClubs = remember(searchQuery, selectedCategory) {
-        mockClubs.filter { club ->
-            (selectedCategory == "所有分类" || club.category == selectedCategory) &&
-            (searchQuery.isEmpty() || club.name.contains(searchQuery, ignoreCase = true))
+    LaunchedEffect(Unit) {
+        try {
+            val resp = RetrofitClient.instance.getClubList()
+            if (resp.isSuccessful) {
+                val body = resp.body()
+                if (body != null && body.code == 200) {
+                    clubs = body.data?.map { it.toClub() } ?: emptyList()
+                }
+            }
+        } catch (_: Exception) {
+            scope.launch { snackbarHostState.showSnackbar("网络错误") }
+        } finally {
+            isLoading = false
         }
+    }
+
+    val filteredClubs = remember(searchQuery, clubs) {
+        clubs?.filter { club ->
+            searchQuery.isEmpty() ||
+            club.clubName.contains(searchQuery, ignoreCase = true) ||
+            club.clubInformation.contains(searchQuery, ignoreCase = true)
+        }
+    }
+
+    if (isLoading) {
+        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator()
+        }
+        return
     }
 
     LazyColumn(
@@ -47,27 +75,30 @@ fun ClubListScreen(
             Spacer(modifier = Modifier.height(16.dp))
         }
 
-        // Search & Filter
         item {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedTextField(
-                    value = searchQuery,
-                    onValueChange = { searchQuery = it },
-                    placeholder = { Text("搜索社团...") },
-                    leadingIcon = { Icon(Icons.Filled.Search, null) },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp)
-                )
-                FilterChipRow(
-                    options = listOf("所有分类") + categories,
-                    selected = selectedCategory,
-                    onSelected = { selectedCategory = it }
-                )
-            }
+            OutlinedTextField(
+                value = searchQuery,
+                onValueChange = { searchQuery = it },
+                placeholder = { Text("搜索社团...") },
+                leadingIcon = { Icon(Icons.Filled.Search, null) },
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp)
+            )
         }
 
-        items(filteredClubs, key = { it.id }) { club ->
-            ClubCard(club = club, onClick = { onClubClick(club.id) })
+        if (filteredClubs.isNullOrEmpty()) {
+            item {
+                Box(Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
+                    Text(
+                        if (searchQuery.isNotEmpty()) "未找到匹配的社团" else "暂无可用社团",
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                    )
+                }
+            }
+        } else {
+            items(filteredClubs, key = { it.clubId }) { club ->
+                ClubCard(club = club, onClick = { onClubClick(club.clubId) })
+            }
         }
     }
 }

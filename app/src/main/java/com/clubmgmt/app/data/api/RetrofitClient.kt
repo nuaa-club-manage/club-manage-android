@@ -1,5 +1,6 @@
 package com.clubmgmt.app.data.api
 
+import com.clubmgmt.app.data.SessionManager
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -8,7 +9,7 @@ import java.util.concurrent.TimeUnit
 
 object RetrofitClient {
 
-    // 后端 API 基础地址，根据实际部署地址修改
+    // Spring Boot 后端地址（Android 模拟器用 10.0.2.2 访问宿主机 localhost）
     private const val BASE_URL = "http://10.0.2.2:8080/"
 
     private val okHttpClient: OkHttpClient by lazy {
@@ -16,6 +17,18 @@ object RetrofitClient {
             level = HttpLoggingInterceptor.Level.BODY
         }
         OkHttpClient.Builder()
+            .addInterceptor { chain ->
+                val original = chain.request()
+                val token = SessionManager.token
+                val request = if (!token.isNullOrBlank()) {
+                    original.newBuilder()
+                        .header("Authorization", "Bearer $token")
+                        .build()
+                } else {
+                    original
+                }
+                chain.proceed(request)
+            }
             .addInterceptor(logging)
             .connectTimeout(15, TimeUnit.SECONDS)
             .readTimeout(15, TimeUnit.SECONDS)

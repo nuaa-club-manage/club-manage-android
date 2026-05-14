@@ -15,9 +15,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.clubmgmt.app.data.mockPendingClubs
-import com.clubmgmt.app.data.mockPendingActivities
-import com.clubmgmt.app.data.mockUsers
 
 @Composable
 fun AdminDashboardScreen(
@@ -38,27 +35,24 @@ fun AdminDashboardScreen(
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             StatCard(
-                title = "待审核社团",
-                count = mockPendingClubs.size,
+                title = "用户管理",
+                icon = Icons.Filled.People,
+                color = Color(0xFFA855F7),
+                onClick = onNavigateUsers,
+                modifier = Modifier.weight(1f)
+            )
+            StatCard(
+                title = "社团审核",
                 icon = Icons.Filled.Groups,
                 color = Color(0xFF3B82F6),
                 onClick = onNavigateClubs,
                 modifier = Modifier.weight(1f)
             )
             StatCard(
-                title = "待审核活动",
-                count = mockPendingActivities.size,
+                title = "活动审核",
                 icon = Icons.Filled.CalendarToday,
                 color = Color(0xFF22C55E),
                 onClick = onNavigateActivities,
-                modifier = Modifier.weight(1f)
-            )
-            StatCard(
-                title = "总用户数",
-                count = mockUsers.size,
-                icon = Icons.Filled.People,
-                color = Color(0xFFA855F7),
-                onClick = onNavigateUsers,
                 modifier = Modifier.weight(1f)
             )
         }
@@ -68,7 +62,6 @@ fun AdminDashboardScreen(
 @Composable
 private fun StatCard(
     title: String,
-    count: Int,
     icon: ImageVector,
     color: Color,
     onClick: () -> Unit,
@@ -86,18 +79,11 @@ private fun StatCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.Top
             ) {
-                Column {
-                    Text(
-                        text = title,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                    )
-                    Text(
-                        text = "$count",
-                        style = MaterialTheme.typography.headlineLarge,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                )
                 Surface(
                     shape = RoundedCornerShape(12.dp),
                     color = color

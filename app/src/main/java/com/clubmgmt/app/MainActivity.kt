@@ -23,6 +23,7 @@ import com.clubmgmt.app.ui.navigation.Screen
 import com.clubmgmt.app.ui.screens.*
 import com.clubmgmt.app.ui.theme.ClubManagementTheme
 import com.clubmgmt.app.ui.theme.Indigo600
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 class MainActivity : ComponentActivity() {
@@ -201,9 +202,9 @@ fun MainApp() {
                 // Detail screens
                 composable(
                     route = Screen.ClubDetail.route,
-                    arguments = listOf(navArgument("clubId") { type = NavType.IntType })
+                    arguments = listOf(navArgument("clubId") { type = NavType.StringType })
                 ) { backStackEntry ->
-                    val clubId = backStackEntry.arguments?.getInt("clubId") ?: 0
+                    val clubId = backStackEntry.arguments?.getString("clubId") ?: ""
                     ClubDetailScreen(
                         clubId = clubId,
                         onBack = { navController.popBackStack() },
@@ -214,9 +215,9 @@ fun MainApp() {
                 }
                 composable(
                     route = Screen.ActivityDetail.route,
-                    arguments = listOf(navArgument("activityId") { type = NavType.IntType })
+                    arguments = listOf(navArgument("activityId") { type = NavType.StringType })
                 ) { backStackEntry ->
-                    val activityId = backStackEntry.arguments?.getInt("activityId") ?: 0
+                    val activityId = backStackEntry.arguments?.getString("activityId") ?: ""
                     ActivityDetailScreen(
                         activityId = activityId,
                         onBack = { navController.popBackStack() },
@@ -238,9 +239,9 @@ fun MainApp() {
                 }
                 composable(
                     route = Screen.ManageClub.route,
-                    arguments = listOf(navArgument("clubId") { type = NavType.IntType })
+                    arguments = listOf(navArgument("clubId") { type = NavType.StringType })
                 ) { backStackEntry ->
-                    val clubId = backStackEntry.arguments?.getInt("clubId") ?: 0
+                    val clubId = backStackEntry.arguments?.getString("clubId") ?: ""
                     ManageClubScreen(
                         clubId = clubId,
                         onBack = { navController.popBackStack() }
@@ -271,7 +272,26 @@ fun MainApp() {
                         navController = navController,
                         currentRoute = Screen.AdminUsers.route
                     ) {
-                        AdminUserManagementScreen()
+                        AdminUserManagementScreen(
+                            onUserClick = { userId ->
+                                navController.navigate(Screen.AdminUserDetail.createRoute(userId))
+                            }
+                        )
+                    }
+                }
+                composable(
+                    route = Screen.AdminUserDetail.route,
+                    arguments = listOf(navArgument("userId") { type = NavType.StringType })
+                ) { backStackEntry ->
+                    val userId = backStackEntry.arguments?.getString("userId") ?: ""
+                    AdminScreenWrapper(
+                        navController = navController,
+                        currentRoute = Screen.AdminUserDetail.route
+                    ) {
+                        AdminUserDetailScreen(
+                            userId = userId,
+                            onBack = { navController.popBackStack() }
+                        )
                     }
                 }
                 composable(Screen.AdminClubApproval.route) {
@@ -295,6 +315,8 @@ fun MainApp() {
     }
 }
 
+data class AdminNavItem(val label: String, val icon: ImageVector, val route: String)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AdminScreenWrapper(
@@ -302,55 +324,77 @@ fun AdminScreenWrapper(
     currentRoute: String,
     content: @Composable () -> Unit
 ) {
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+    val scope = rememberCoroutineScope()
+
     val adminNavItems = listOf(
-        Triple("仪表盘", Icons.Filled.Dashboard, Screen.AdminDashboard.route),
-        Triple("用户管理", Icons.Filled.People, Screen.AdminUsers.route),
-        Triple("社团审核", Icons.Filled.Groups, Screen.AdminClubApproval.route),
-        Triple("活动审核", Icons.Filled.CalendarToday, Screen.AdminActivityApproval.route)
+        AdminNavItem("仪表盘", Icons.Filled.Dashboard, Screen.AdminDashboard.route),
+        AdminNavItem("用户管理", Icons.Filled.People, Screen.AdminUsers.route),
+        AdminNavItem("社团审核", Icons.Filled.Groups, Screen.AdminClubApproval.route),
+        AdminNavItem("活动审核", Icons.Filled.CalendarToday, Screen.AdminActivityApproval.route)
     )
 
-    Column(modifier = Modifier.fillMaxSize()) {
-        TopAppBar(
-            title = { Text("管理后台", fontWeight = FontWeight.Bold) },
-            navigationIcon = {
-                IconButton(onClick = {
-                    navController.navigate(Screen.Home.route) {
-                        popUpTo(Screen.AdminDashboard.route) { inclusive = true }
-                    }
-                }) {
-                    Text("← 返回", color = Indigo600, fontSize = 14.sp)
-                }
-            },
-            colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = MaterialTheme.colorScheme.surface
-            )
-        )
-
-        ScrollableTabRow(
-            selectedTabIndex = adminNavItems.indexOfFirst { it.third == currentRoute }
-                .coerceAtLeast(0),
-            edgePadding = 16.dp
-        ) {
-            adminNavItems.forEach { (label, icon, route) ->
-                Tab(
-                    selected = currentRoute == route,
-                    onClick = {
-                        if (currentRoute != route) {
-                            navController.navigate(route) {
-                                popUpTo(Screen.AdminDashboard.route) { saveState = true }
-                                launchSingleTop = true
-                                restoreState = true
-                            }
-                        }
-                    },
-                    text = { Text(label) },
-                    icon = { Icon(icon, contentDescription = label, modifier = Modifier.size(18.dp)) }
+    ModalNavigationDrawer(
+        drawerState = drawerState,
+        drawerContent = {
+            ModalDrawerSheet(modifier = Modifier.width(280.dp)) {
+                Spacer(Modifier.height(24.dp))
+                Text(
+                    "管理后台",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp)
                 )
+                HorizontalDivider()
+                Spacer(Modifier.height(8.dp))
+                adminNavItems.forEach { item ->
+                    NavigationDrawerItem(
+                        icon = { Icon(item.icon, null, modifier = Modifier.size(22.dp)) },
+                        label = { Text(item.label, fontWeight = FontWeight.Medium) },
+                        selected = currentRoute == item.route || (item.route == Screen.AdminUsers.route && currentRoute.startsWith("admin/users/")),
+                        onClick = {
+                            if (currentRoute != item.route) {
+                                navController.navigate(item.route) {
+                                    popUpTo(Screen.AdminDashboard.route) { saveState = true }
+                                    launchSingleTop = true
+                                    restoreState = true
+                                }
+                            }
+                            scope.launch { drawerState.close() }
+                        },
+                        modifier = Modifier.padding(horizontal = 12.dp)
+                    )
+                }
             }
         }
-
-        Box(modifier = Modifier.fillMaxSize()) {
-            content()
+    ) {
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text("管理后台", fontWeight = FontWeight.Bold) },
+                    navigationIcon = {
+                        IconButton(onClick = { scope.launch { drawerState.open() } }) {
+                            Icon(Icons.Filled.Menu, contentDescription = "菜单")
+                        }
+                    },
+                    actions = {
+                        IconButton(onClick = {
+                            navController.navigate(Screen.Home.route) {
+                                popUpTo(Screen.AdminDashboard.route) { inclusive = true }
+                            }
+                        }) {
+                            Text("返回", fontSize = 14.sp, color = Indigo600)
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.surface
+                    )
+                )
+            }
+        ) { innerPadding ->
+            Box(modifier = Modifier.padding(innerPadding).fillMaxSize()) {
+                content()
+            }
         }
     }
 }

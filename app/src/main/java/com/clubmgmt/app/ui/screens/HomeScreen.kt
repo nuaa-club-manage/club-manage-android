@@ -1,61 +1,65 @@
 package com.clubmgmt.app.ui.screens
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.compose.AsyncImage
-import com.clubmgmt.app.data.mockActivities
-import com.clubmgmt.app.data.mockClubs
+import com.clubmgmt.app.data.api.RetrofitClient
+import com.clubmgmt.app.data.toActivity
+import com.clubmgmt.app.data.toClub
 import com.clubmgmt.app.ui.components.ActivityCard
 import com.clubmgmt.app.ui.components.ClubCard
 
 @Composable
 fun HomeScreen(
-    onClubClick: (Int) -> Unit,
-    onActivityClick: (Int) -> Unit,
+    onClubClick: (String) -> Unit,
+    onActivityClick: (String) -> Unit,
     onViewAllClubs: () -> Unit,
     onViewAllActivities: () -> Unit
 ) {
+    var featuredClubs by remember { mutableStateOf<List<com.clubmgmt.app.data.Club>>(emptyList()) }
+    var featuredActivities by remember { mutableStateOf<List<com.clubmgmt.app.data.Activity>>(emptyList()) }
+    var isLoading by remember { mutableStateOf(true) }
+
+    LaunchedEffect(Unit) {
+        try {
+            val clubResp = RetrofitClient.instance.getClubList()
+            val activityResp = RetrofitClient.instance.getActivities()
+            if (clubResp.isSuccessful) {
+                val body = clubResp.body()
+                if (body != null && body.code == 200) {
+                    featuredClubs = body.data?.map { it.toClub() }?.take(4) ?: emptyList()
+                }
+            }
+            if (activityResp.isSuccessful) {
+                val body = activityResp.body()
+                if (body != null && body.code == 200) {
+                    featuredActivities = body.data?.map { it.toActivity() }?.take(3) ?: emptyList()
+                }
+            }
+        } catch (_: Exception) { }
+        finally { isLoading = false }
+    }
+
     LazyColumn(
         contentPadding = PaddingValues(bottom = 80.dp)
     ) {
-        // Hero Section
         item {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(320.dp),
+                    .height(280.dp),
                 contentAlignment = Alignment.Center
             ) {
-                AsyncImage(
-                    model = "https://picsum.photos/seed/hero/1920/1080",
-                    contentDescription = null,
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop
-                )
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(Brush.verticalGradient(
-                            listOf(Color.Transparent, Color.Black.copy(alpha = 0.6f))
-                        ))
-                )
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -66,24 +70,21 @@ fun HomeScreen(
                         text = "发现你的社群",
                         fontSize = 32.sp,
                         fontWeight = FontWeight.ExtraBold,
-                        color = Color.White,
+                        color = MaterialTheme.colorScheme.primary,
                         textAlign = TextAlign.Center
                     )
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
                         text = "发现、加入并参与符合您热情的社团和活动。\n您的下一次冒险从这里开始。",
                         fontSize = 16.sp,
-                        color = Color.White.copy(alpha = 0.9f),
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                         textAlign = TextAlign.Center
                     )
                     Spacer(modifier = Modifier.height(24.dp))
                     Button(
                         onClick = onViewAllClubs,
                         shape = RoundedCornerShape(24.dp),
-                        modifier = Modifier.height(48.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF4F46E5)
-                        )
+                        modifier = Modifier.height(48.dp)
                     ) {
                         Text("立刻探索社团", modifier = Modifier.padding(horizontal = 16.dp))
                     }
@@ -91,46 +92,50 @@ fun HomeScreen(
             }
         }
 
-        // Featured Clubs
         item {
-            SectionHeader(
-                title = "精选社团",
-                onViewAll = onViewAllClubs
-            )
+            SectionHeader(title = "精选社团", onViewAll = onViewAllClubs)
         }
         item {
-            androidx.compose.foundation.lazy.LazyRow(
-                contentPadding = PaddingValues(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                items(mockClubs.take(4), key = { it.id }) { club ->
-                    ClubCard(
-                        club = club,
-                        onClick = { onClubClick(club.id) },
-                        modifier = Modifier.width(260.dp)
-                    )
+            if (isLoading) {
+                Box(Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
+                }
+            } else {
+                LazyRow(
+                    contentPadding = PaddingValues(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    items(featuredClubs, key = { it.clubId }) { club ->
+                        ClubCard(
+                            club = club,
+                            onClick = { onClubClick(club.clubId) },
+                            modifier = Modifier.width(260.dp)
+                        )
+                    }
                 }
             }
         }
 
-        // Upcoming Activities
         item {
-            SectionHeader(
-                title = "近期活动",
-                onViewAll = onViewAllActivities
-            )
+            SectionHeader(title = "近期活动", onViewAll = onViewAllActivities)
         }
         item {
-            androidx.compose.foundation.lazy.LazyRow(
-                contentPadding = PaddingValues(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                items(mockActivities.take(3), key = { it.id }) { activity ->
-                    ActivityCard(
-                        activity = activity,
-                        onClick = { onActivityClick(activity.id) },
-                        modifier = Modifier.width(280.dp)
-                    )
+            if (isLoading) {
+                Box(Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
+                }
+            } else {
+                LazyRow(
+                    contentPadding = PaddingValues(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    items(featuredActivities, key = { it.activityId }) { activity ->
+                        ActivityCard(
+                            activity = activity,
+                            onClick = { onActivityClick(activity.activityId) },
+                            modifier = Modifier.width(280.dp)
+                        )
+                    }
                 }
             }
         }

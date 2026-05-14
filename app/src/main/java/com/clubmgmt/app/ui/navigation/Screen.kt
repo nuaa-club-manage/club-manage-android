@@ -9,10 +9,10 @@ sealed class Screen(val route: String) {
 
     // Detail screens
     data object ClubDetail : Screen("clubs/{clubId}") {
-        fun createRoute(clubId: Int) = "clubs/$clubId"
+        fun createRoute(clubId: String) = "clubs/$clubId"
     }
     data object ActivityDetail : Screen("activities/{activityId}") {
-        fun createRoute(activityId: Int) = "activities/$activityId"
+        fun createRoute(activityId: String) = "activities/$activityId"
     }
 
     // Form screens
@@ -20,7 +20,7 @@ sealed class Screen(val route: String) {
     data object PublishActivity : Screen("activities/publish")
     data object EditProfile : Screen("profile/edit")
     data object ManageClub : Screen("clubs/{clubId}/manage") {
-        fun createRoute(clubId: Int) = "clubs/$clubId/manage"
+        fun createRoute(clubId: String) = "clubs/$clubId/manage"
     }
 
     // Auth screens
@@ -31,6 +31,9 @@ sealed class Screen(val route: String) {
     // Admin screens
     data object AdminDashboard : Screen("admin/dashboard")
     data object AdminUsers : Screen("admin/users")
+    data object AdminUserDetail : Screen("admin/users/{userId}") {
+        fun createRoute(userId: String) = "admin/users/$userId"
+    }
     data object AdminClubApproval : Screen("admin/clubs")
     data object AdminActivityApproval : Screen("admin/activities")
 }

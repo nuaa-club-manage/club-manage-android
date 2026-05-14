@@ -11,6 +11,10 @@ object SessionManager {
 
     private var prefs: SharedPreferences? = null
 
+
+
+
+    
     fun init(context: Context) {
         prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
     }
