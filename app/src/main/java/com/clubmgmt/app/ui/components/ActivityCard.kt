@@ -54,7 +54,7 @@ fun ActivityCard(
                     )
                     Spacer(Modifier.width(4.dp))
                     Text(
-                        activity.location,
+                        activity.location.orEmpty(),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
                         maxLines = 1,

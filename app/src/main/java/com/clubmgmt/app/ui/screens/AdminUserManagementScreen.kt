@@ -181,20 +181,20 @@ private fun UserInfoCard(user: UserInfoData, onClick: () -> Unit = {}) {
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(user.realName.ifBlank { user.userName }, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Text(user.realName.orEmpty().ifBlank { user.userName }, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                 Surface(
                     shape = RoundedCornerShape(4.dp),
                     color = MaterialTheme.colorScheme.primaryContainer
                 ) {
-                    Text(user.gender, modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp), style = MaterialTheme.typography.bodySmall)
+                    Text(user.gender.orEmpty(), modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp), style = MaterialTheme.typography.bodySmall)
                 }
             }
             Spacer(Modifier.height(6.dp))
             Text("账号: ${user.userId}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
-            Text("手机: ${user.phoneNumber}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
-            Text("邮箱: ${user.userMailbox}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
-            if (user.school.isNotBlank() || user.degree.isNotBlank()) {
-                Text("${user.school} · ${user.degree}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
+            Text("手机: ${user.phoneNumber.orEmpty()}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
+            Text("邮箱: ${user.userMailbox.orEmpty()}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
+            if (!user.school.orEmpty().isBlank() || !user.degree.orEmpty().isBlank()) {
+                Text("${user.school.orEmpty()} · ${user.degree.orEmpty()}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
             }
             Text("注册时间: ${user.registerTime ?: ""}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f))
         }

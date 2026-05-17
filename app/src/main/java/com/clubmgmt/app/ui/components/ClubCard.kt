@@ -35,7 +35,7 @@ fun ClubCard(
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = club.clubInformation,
+                text = club.clubInformation.orEmpty(),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                 maxLines = 2,

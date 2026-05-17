@@ -21,7 +21,7 @@ fun ActivityListScreen(
     onActivityClick: (String) -> Unit
 ) {
     var searchQuery by remember { mutableStateOf("") }
-    var activities by remember { mutableStateOf<List<com.clubmgmt.app.data.Activity>>(null) }
+    var activities by remember { mutableStateOf<List<com.clubmgmt.app.data.Activity>?>(null) }
     var isLoading by remember { mutableStateOf(true) }
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()

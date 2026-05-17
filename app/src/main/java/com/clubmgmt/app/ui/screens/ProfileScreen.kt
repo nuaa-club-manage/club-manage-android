@@ -191,7 +191,7 @@ fun ProfileScreen(
                                 Spacer(Modifier.height(12.dp))
                                 Text(data.userName, style = MaterialTheme.typography.headlineMedium)
                                 Text(
-                                    data.userMailbox,
+                                    data.userMailbox ?: data.phoneNumber ?: "",
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
                                 )
@@ -303,7 +303,7 @@ fun ProfileScreen(
                                                 fontWeight = FontWeight.Bold
                                             )
                                             Spacer(Modifier.height(4.dp))
-                                            StatusBadge(app.reviewState)
+                                            StatusBadge(app.reviewState.orEmpty())
                                         }
                                         Icon(
                                             Icons.Filled.ChevronRight, null,
@@ -397,7 +397,7 @@ fun ProfileScreen(
                                         }
                                         Spacer(Modifier.height(4.dp))
                                         Row(verticalAlignment = Alignment.CenterVertically) {
-                                            StatusBadge(reg.reviewState)
+                                            StatusBadge(reg.reviewState.orEmpty())
                                         }
                                     }
                                 }
@@ -434,7 +434,7 @@ fun ProfileScreen(
                                     Column(Modifier.padding(16.dp)) {
                                         Text(act.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                                         Spacer(Modifier.height(4.dp))
-                                        StatusBadge(act.activityState)
+                                        StatusBadge(act.activityState.orEmpty())
                                     }
                                 }
                             }

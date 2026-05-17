@@ -98,7 +98,7 @@ fun RegisterScreen(
             try {
                 val response = RetrofitClient.instance.register(
                     RegisterRequest(
-                        userId = userId,
+                        userId = userID,
                         contact = contact,
                         userPassword = userPassword,
                         verifyCode = verifyCode

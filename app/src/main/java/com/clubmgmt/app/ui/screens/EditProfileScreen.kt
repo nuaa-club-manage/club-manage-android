@@ -62,12 +62,12 @@ fun EditProfileScreen(
                 if (body != null && body.code == 200) {
                     val d = body.data ?: return@LaunchedEffect
                     userName = d.userName
-                    phoneNumber = d.phoneNumber
-                    userMailbox = d.userMailbox
-                    realName = d.realName
-                    gender = d.gender
-                    degree = d.degree
-                    school = d.school
+                    phoneNumber = d.phoneNumber.orEmpty()
+                    userMailbox = d.userMailbox.orEmpty()
+                    realName = d.realName.orEmpty()
+                    gender = d.gender.orEmpty()
+                    degree = d.degree.orEmpty()
+                    school = d.school.orEmpty()
                 } else {
                     snackbarHostState.showSnackbar(body?.message ?: "加载信息失败")
                 }

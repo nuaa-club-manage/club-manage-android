@@ -50,7 +50,7 @@ fun ManageClubScreen(
                     club = c
                     if (c != null) {
                         clubName = c.clubName
-                        clubDescription = c.clubInformation
+                        clubDescription = c.clubInformation.orEmpty()
                     }
                 }
             }
@@ -170,11 +170,18 @@ fun ManageClubScreen(
                                         DissolveClubRequest(clubId = clubId)
                                     )
                                     if (resp.isSuccessful) {
-                                        snackbarHostState.showSnackbar("社团已解散")
-                                        onBack()
+                                        val body = resp.body()
+                                        if (body != null && body.code == 200) {
+                                            snackbarHostState.showSnackbar(body.message)
+                                            onBack()
+                                        } else {
+                                            snackbarHostState.showSnackbar(body?.message ?: "解散失败")
+                                        }
+                                    } else {
+                                        snackbarHostState.showSnackbar("解散失败 (${resp.code()})")
                                     }
                                 } catch (_: Exception) {
-                                    snackbarHostState.showSnackbar("解散失败")
+                                    snackbarHostState.showSnackbar("网络错误，请稍后重试")
                                 }
                             }
                         }
@@ -213,7 +220,7 @@ private fun MembersTab(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Column(Modifier.weight(1f)) {
-                        Text(request.realName.ifBlank { request.userName }, style = MaterialTheme.typography.titleMedium)
+                        Text(request.realName.orEmpty().ifBlank { request.userName }, style = MaterialTheme.typography.titleMedium)
                         Text("学号: ${request.userId}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {

@@ -121,7 +121,7 @@ fun ActivityDetailScreen(
                 Column(Modifier.padding(16.dp)) {
                     Text("关于活动", style = MaterialTheme.typography.titleLarge)
                     Spacer(Modifier.height(8.dp))
-                    Text(safeActivity.content, style = MaterialTheme.typography.bodyMedium)
+                    Text(safeActivity.content.orEmpty(), style = MaterialTheme.typography.bodyMedium)
                 }
             }
 
@@ -134,7 +134,7 @@ fun ActivityDetailScreen(
                     Modifier.padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    DetailRow(Icons.Filled.LocationOn, safeActivity.location, "地点")
+                    DetailRow(Icons.Filled.LocationOn, safeActivity.location.orEmpty(), "地点")
                     HorizontalDivider()
                     DetailRow(Icons.Filled.Groups, safeActivity.clubName, "主办社团")
                     if (safeActivity.capacityLimit > 0) {

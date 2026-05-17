@@ -21,7 +21,7 @@ fun ClubListScreen(
     onClubClick: (String) -> Unit
 ) {
     var searchQuery by remember { mutableStateOf("") }
-    var clubs by remember { mutableStateOf<List<com.clubmgmt.app.data.Club>>(null) }
+    var clubs by remember { mutableStateOf<List<com.clubmgmt.app.data.Club>?>(null) }
     var isLoading by remember { mutableStateOf(true) }
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
@@ -46,7 +46,7 @@ fun ClubListScreen(
         clubs?.filter { club ->
             searchQuery.isEmpty() ||
             club.clubName.contains(searchQuery, ignoreCase = true) ||
-            club.clubInformation.contains(searchQuery, ignoreCase = true)
+            club.clubInformation?.contains(searchQuery, ignoreCase = true) ?: false
         }
     }
 

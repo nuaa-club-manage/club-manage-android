@@ -143,11 +143,11 @@ private fun PendingActivityCard(activity: ActivityData, onApprove: () -> Unit, o
             Text(activity.title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
             Text(activity.clubName, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
             Spacer(Modifier.height(4.dp))
-            Text(activity.content, style = MaterialTheme.typography.bodySmall,
+            Text(activity.content.orEmpty(), style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                 maxLines = 2, overflow = TextOverflow.Ellipsis)
             Spacer(Modifier.height(4.dp))
-            Text(activity.location, style = MaterialTheme.typography.bodySmall,
+            Text(activity.location.orEmpty(), style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f))
             Spacer(Modifier.height(12.dp))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {

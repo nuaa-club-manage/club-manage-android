@@ -122,7 +122,7 @@ fun ClubDetailScreen(
                 Column(Modifier.padding(16.dp)) {
                     Text("关于社团", style = MaterialTheme.typography.titleLarge)
                     Spacer(Modifier.height(8.dp))
-                    Text(safeClub.clubInformation, style = MaterialTheme.typography.bodyMedium)
+                    Text(safeClub.clubInformation.orEmpty(), style = MaterialTheme.typography.bodyMedium)
                 }
             }
 

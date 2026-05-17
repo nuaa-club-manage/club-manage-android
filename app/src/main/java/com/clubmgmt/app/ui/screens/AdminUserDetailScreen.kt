@@ -52,12 +52,12 @@ fun AdminUserDetailScreen(
                     if (user != null) {
                         targetUserID = user.userId
                         userName = user.userName
-                        phoneNumber = user.phoneNumber
-                        userMailbox = user.userMailbox
-                        realName = user.realName
-                        gender = user.gender
-                        degree = user.degree
-                        school = user.school
+                        phoneNumber = user.phoneNumber.orEmpty()
+                        userMailbox = user.userMailbox.orEmpty()
+                        realName = user.realName.orEmpty()
+                        gender = user.gender.orEmpty()
+                        degree = user.degree.orEmpty()
+                        school = user.school.orEmpty()
                     } else {
                         snackbarHostState.showSnackbar("未找到该用户")
                     }

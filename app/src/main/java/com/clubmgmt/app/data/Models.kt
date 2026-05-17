@@ -1,5 +1,8 @@
 package com.clubmgmt.app.data
 
+import com.clubmgmt.app.data.api.ActivityData
+import com.clubmgmt.app.data.api.ClubData
+
 /**
  * 领域模型 — 与后端实体对齐
  * 所有 ID 均为 String 类型
@@ -10,7 +13,7 @@ data class Club(
     val clubId: String,
     val userId: String,
     val clubName: String,
-    val clubInformation: String,
+    val clubInformation: String? = null,
     val school: String = "",
     val clubState: String = "",      // pending / approved / rejected
     val establishmentTime: String = ""
@@ -23,10 +26,10 @@ data class Activity(
     val clubName: String,
     val userId: String,
     val title: String,
-    val content: String,
-    val location: String,
+    val content: String? = null,
+    val location: String? = null,
     val capacityLimit: Int = 0,
-    val activityState: String = "",  // pending / approved / rejected / ended
+    val activityState: String? = null,  // pending / approved / rejected / ended
     val publishTime: String = ""
 )
 
@@ -34,21 +37,21 @@ data class Activity(
 data class ClubMember(
     val userId: String,
     val userName: String,
-    val realName: String,
+    val realName: String? = null,
     val school: String = "",
     val degree: String = "",
     val phoneNumber: String = "",
     val clubId: String,
     val clubName: String,
     val clubManager: String = "",    // "1" 是管理员
-    val reviewState: String = ""
+    val reviewState: String? = null
 )
 
 // 入社申请（对应后端 ClubMemberApplyRespDTO）
 data class ClubApply(
     val clubId: String,
     val clubName: String,
-    val reviewState: String = ""
+    val reviewState: String? = null
 )
 
 // 活动报名（对应后端 UserRegistrationDetailDTO）
@@ -57,7 +60,7 @@ data class Registration(
     val activityId: String,
     val title: String,
     val content: String = "",
-    val reviewState: String = "",
+    val reviewState: String? = null,
     val publishTime: String = "",
     val clubId: String = ""
 )
@@ -67,7 +70,7 @@ data class UserRating(
     val ratingId: String,
     val clubId: String,
     val clubName: String,
-    val rating: String,              // 后端用字符串存储评分
+    val rating: String? = null,      // 后端用字符串存储评分
     val ratingTime: String = ""
 )
 
@@ -93,10 +96,6 @@ data class UserInfo(
 )
 
 enum class UserRole { USER, ADMIN }
-
-// ======================== API 模型 → 领域模型 映射 ========================
-import com.clubmgmt.app.data.api.ClubData
-import com.clubmgmt.app.data.api.ActivityData
 
 fun ClubData.toClub() = Club(
     clubId = clubId,

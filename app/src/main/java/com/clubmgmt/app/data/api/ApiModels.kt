@@ -63,15 +63,16 @@ data class AdminLoginRequest(
 // ======================== 用户模块 ========================
 
 // 用户信息响应（对应后端 UserInfoRespDTO）
+// 注意：phoneNumber/userMailbox/realName/gender/degree/school 在后端可为 null
 data class UserInfoData(
     @SerializedName("userId") val userId: String,
     @SerializedName("userName") val userName: String,
-    @SerializedName("phoneNumber") val phoneNumber: String,
-    @SerializedName("userMailbox") val userMailbox: String,
-    @SerializedName("realName") val realName: String,
-    @SerializedName("gender") val gender: String,
-    @SerializedName("degree") val degree: String,
-    @SerializedName("school") val school: String,
+    @SerializedName("phoneNumber") val phoneNumber: String? = null,
+    @SerializedName("userMailbox") val userMailbox: String? = null,
+    @SerializedName("realName") val realName: String? = null,
+    @SerializedName("gender") val gender: String? = null,
+    @SerializedName("degree") val degree: String? = null,
+    @SerializedName("school") val school: String? = null,
     @SerializedName("registerTime") val registerTime: String? = null
 )
 
@@ -123,7 +124,7 @@ data class ClubData(
     @SerializedName("clubId") val clubId: String,
     @SerializedName("userId") val userId: String,
     @SerializedName("clubName") val clubName: String,
-    @SerializedName("clubInformation") val clubInformation: String,
+    @SerializedName("clubInformation") val clubInformation: String? = null,
     @SerializedName("school") val school: String? = null,
     @SerializedName("clubState") val clubState: String? = null,  // pending/approved/rejected
     @SerializedName("establishmentTime") val establishmentTime: String? = null
@@ -162,7 +163,7 @@ data class AuditMemberRequest(
 data class ClubMemberApplyData(
     @SerializedName("clubId") val clubId: String,
     @SerializedName("clubName") val clubName: String,
-    @SerializedName("reviewState") val reviewState: String   // pending/approved/rejected
+    @SerializedName("reviewState") val reviewState: String? = null   // pending/approved/rejected
 )
 
 class ClubMemberApplyListResponse : ApiResult() {
@@ -174,13 +175,13 @@ class ClubMemberApplyListResponse : ApiResult() {
 data class ClubMemberAuditData(
     @SerializedName("userId") val userId: String,
     @SerializedName("userName") val userName: String,
-    @SerializedName("realName") val realName: String,
+    @SerializedName("realName") val realName: String? = null,
     @SerializedName("studentId") val studentId: String? = null,
     @SerializedName("school") val school: String? = null,
     @SerializedName("degree") val degree: String? = null,
     @SerializedName("clubId") val clubId: String,
     @SerializedName("clubName") val clubName: String,
-    @SerializedName("reviewState") val reviewState: String
+    @SerializedName("reviewState") val reviewState: String? = null
 )
 
 class ClubMemberAuditListResponse : ApiResult() {
@@ -192,14 +193,14 @@ class ClubMemberAuditListResponse : ApiResult() {
 data class ClubMemberListData(
     @SerializedName("userId") val userId: String,
     @SerializedName("userName") val userName: String,
-    @SerializedName("realName") val realName: String,
+    @SerializedName("realName") val realName: String? = null,
     @SerializedName("school") val school: String? = null,
     @SerializedName("degree") val degree: String? = null,
     @SerializedName("phoneNumber") val phoneNumber: String? = null,
     @SerializedName("clubId") val clubId: String,
     @SerializedName("clubName") val clubName: String,
     @SerializedName("clubManager") val clubManager: String? = null,  // 1-是管理员，null/0-普通成员
-    @SerializedName("reviewState") val reviewState: String
+    @SerializedName("reviewState") val reviewState: String? = null
 )
 
 class ClubMemberListResponse : ApiResult() {
@@ -234,10 +235,10 @@ data class ActivityData(
     @SerializedName("clubName") val clubName: String,
     @SerializedName("userId") val userId: String,
     @SerializedName("title") val title: String,
-    @SerializedName("content") val content: String,
-    @SerializedName("location") val location: String,
+    @SerializedName("content") val content: String? = null,
+    @SerializedName("location") val location: String? = null,
     @SerializedName("capacityLimit") val capacityLimit: Int? = null,
-    @SerializedName("activityState") val activityState: String,  // pending/approved/rejected/ended
+    @SerializedName("activityState") val activityState: String? = null,  // pending/approved/rejected/ended
     @SerializedName("publishTime") val publishTime: String? = null
 )
 
@@ -277,9 +278,9 @@ data class RegistrationAuditData(
     @SerializedName("activityId") val activityId: String,
     @SerializedName("title") val title: String,
     @SerializedName("userId") val userId: String,
-    @SerializedName("realName") val realName: String,
-    @SerializedName("phoneNumber") val phoneNumber: String,
-    @SerializedName("reviewState") val reviewState: String
+    @SerializedName("realName") val realName: String? = null,
+    @SerializedName("phoneNumber") val phoneNumber: String? = null,
+    @SerializedName("reviewState") val reviewState: String? = null
 )
 
 class RegistrationAuditListResponse : ApiResult() {
@@ -293,7 +294,7 @@ data class UserRegistrationData(
     @SerializedName("activityId") val activityId: String,
     @SerializedName("title") val title: String,
     @SerializedName("content") val content: String? = null,
-    @SerializedName("reviewState") val reviewState: String,
+    @SerializedName("reviewState") val reviewState: String? = null,
     @SerializedName("publishTime") val publishTime: String? = null,
     @SerializedName("clubId") val clubId: String? = null
 )
@@ -306,8 +307,8 @@ class UserRegistrationListResponse : ApiResult() {
 // 已通过报名的参与者（对应后端 ApprovedParticipantDTO）
 data class ApprovedParticipantData(
     @SerializedName("userId") val userId: String,
-    @SerializedName("realName") val realName: String,
-    @SerializedName("phoneNumber") val phoneNumber: String
+    @SerializedName("realName") val realName: String? = null,
+    @SerializedName("phoneNumber") val phoneNumber: String? = null
 )
 
 class ApprovedParticipantListResponse : ApiResult() {
@@ -327,7 +328,7 @@ data class UserRatingData(
     @SerializedName("ratingId") val ratingId: String,
     @SerializedName("clubId") val clubId: String,
     @SerializedName("clubName") val clubName: String,
-    @SerializedName("rating") val rating: String,
+    @SerializedName("rating") val rating: String? = null,
     @SerializedName("ratingTime") val ratingTime: String? = null
 )
 

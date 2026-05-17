@@ -52,7 +52,7 @@ fun AdminClubApprovalScreen() {
         if (searchText.isBlank()) pendingClubs
         else pendingClubs.filter {
             it.clubName.contains(searchText, ignoreCase = true) ||
-            it.clubInformation.contains(searchText, ignoreCase = true)
+            it.clubInformation?.contains(searchText, ignoreCase = true) ?: false
         }
     }
 
@@ -148,7 +148,7 @@ private fun PendingClubCard(club: ClubData, onApprove: () -> Unit, onReject: () 
                 }
             }
             Spacer(Modifier.height(8.dp))
-            Text(club.clubInformation, style = MaterialTheme.typography.bodySmall,
+            Text(club.clubInformation.orEmpty(), style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                 maxLines = 2, overflow = TextOverflow.Ellipsis)
             Spacer(Modifier.height(12.dp))
