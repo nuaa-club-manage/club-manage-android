@@ -409,3 +409,10 @@ data class AuditActivityRequest(
     @SerializedName("activityId") val activityId: String,
     @SerializedName("pass") val pass: Boolean
 )
+
+// 结束活动请求（提交总结和到场名单）
+data class ActivityEndRequest(
+    @SerializedName("activityId") val activityId: String,
+    @SerializedName("summary") val summary: String,
+    @SerializedName("participantList") val participantList: String
+)

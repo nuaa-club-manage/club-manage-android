@@ -39,7 +39,8 @@ fun ProfileScreen(
     onClubClick: (String) -> Unit,
     onManageClub: (String) -> Unit,
     onActivityClick: (String) -> Unit,
-    onEnterAdmin: () -> Unit
+    onEnterAdmin: () -> Unit,
+    onLogout: () -> Unit = {}
 ) {
     var activeTab by remember { mutableIntStateOf(0) }
     val tabs = listOf("我加入的社团", "我管理的社团", "我报名的活动", "我发布的活动")
@@ -249,6 +250,14 @@ fun ProfileScreen(
                                     Text("管理后台")
                                 }
                             }
+
+                            Spacer(Modifier.height(8.dp))
+                            TextButton(
+                                onClick = onLogout,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text("退出登录", color = Color(0xFFEF4444))
+                            }
                         }
                     }
                 }
@@ -398,6 +407,30 @@ fun ProfileScreen(
                                         Spacer(Modifier.height(4.dp))
                                         Row(verticalAlignment = Alignment.CenterVertically) {
                                             StatusBadge(reg.reviewState.orEmpty())
+                                        }
+                                        if (reg.reviewState == "待审核" || reg.reviewState == "pending") {
+                                            Spacer(Modifier.height(8.dp))
+                                            OutlinedButton(
+                                                onClick = {
+                                                    scope.launch {
+                                                        try {
+                                                            val resp = RetrofitClient.instance.cancelRegistration(
+                                                                com.clubmgmt.app.data.api.CancelRegistrationRequest(registrationID = reg.registrationId ?: "")
+                                                            )
+                                                            if (resp.isSuccessful) {
+                                                                myRegistrations = myRegistrations?.filter { it.registrationId != reg.registrationId }
+                                                                snackbarHostState.showSnackbar("已取消报名")
+                                                            }
+                                                        } catch (_: Exception) {
+                                                            snackbarHostState.showSnackbar("取消失败")
+                                                        }
+                                                    }
+                                                },
+                                                shape = RoundedCornerShape(8.dp),
+                                                colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFEF4444))
+                                            ) {
+                                                Text("取消报名")
+                                            }
                                         }
                                     }
                                 }

@@ -6,7 +6,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -14,7 +13,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.clubmgmt.app.data.api.JoinClubRequest
 import com.clubmgmt.app.data.api.RetrofitClient
 import com.clubmgmt.app.data.api.SubmitRatingRequest
 import com.clubmgmt.app.data.toClub
@@ -25,8 +23,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun ClubDetailScreen(
     clubId: String,
-    onBack: () -> Unit,
-    onManageClub: (String) -> Unit
+    onBack: () -> Unit
 ) {
     var club by remember { mutableStateOf<com.clubmgmt.app.data.Club?>(null) }
     var isLoading by remember { mutableStateOf(true) }
@@ -36,6 +33,8 @@ fun ClubDetailScreen(
     var currentRating by remember { mutableIntStateOf(0) }
     var isSubmittingRating by remember { mutableStateOf(false) }
     var isJoining by remember { mutableStateOf(false) }
+    var averageScore by remember { mutableStateOf(0.0) }
+    var ratingCount by remember { mutableStateOf(0) }
 
     LaunchedEffect(clubId) {
         try {
@@ -44,6 +43,18 @@ fun ClubDetailScreen(
                 val body = resp.body()
                 if (body != null && body.code == 200) {
                     club = body.data?.toClub()
+                }
+            }
+            // 获取平均分
+            val avgResp = RetrofitClient.instance.getAverageScores()
+            if (avgResp.isSuccessful) {
+                val avgBody = avgResp.body()
+                if (avgBody != null && avgBody.code == 200) {
+                    val match = avgBody.data?.find { it.clubId == clubId }
+                    if (match != null) {
+                        averageScore = match.averageScore ?: 0.0
+                        ratingCount = match.ratingCount ?: 0
+                    }
                 }
             }
         } catch (_: Exception) {
@@ -155,7 +166,31 @@ fun ClubDetailScreen(
                 }
             }
 
-            // 评分
+            // 平均分展示
+            if (ratingCount > 0) {
+                Card(
+                    shape = RoundedCornerShape(12.dp),
+                    elevation = CardDefaults.cardElevation(2.dp)
+                ) {
+                    Column(Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text("社团评分", style = MaterialTheme.typography.titleMedium)
+                        Spacer(Modifier.height(8.dp))
+                        StarRating(
+                            rating = averageScore.toFloat(),
+                            onRatingChange = {},
+                            starSize = 28.dp
+                        )
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            "%.1f 分（%d 人评价）".format(averageScore, ratingCount),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                        )
+                    }
+                }
+            }
+
+            // 用户评分
             Card(
                 shape = RoundedCornerShape(12.dp),
                 elevation = CardDefaults.cardElevation(2.dp)
@@ -174,37 +209,60 @@ fun ClubDetailScreen(
                         onRatingChange = { currentRating = it },
                         starSize = 32.dp
                     )
-                    if (currentRating > 0) {
-                        Spacer(Modifier.height(8.dp))
-                        Button(
+                    Spacer(Modifier.height(8.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        if (currentRating > 0) {
+                            Button(
+                                onClick = {
+                                    scope.launch {
+                                        isSubmittingRating = true
+                                        try {
+                                            val resp = RetrofitClient.instance.submitRating(
+                                                SubmitRatingRequest(clubId = clubId, rating = currentRating.toString())
+                                            )
+                                            if (resp.isSuccessful) {
+                                                val body = resp.body()
+                                                if (body != null && body.code == 200) {
+                                                    snackbarHostState.showSnackbar("评分成功")
+                                                } else {
+                                                    snackbarHostState.showSnackbar(body?.message ?: "评分失败")
+                                                }
+                                            } else {
+                                                snackbarHostState.showSnackbar("评分失败")
+                                            }
+                                        } catch (_: Exception) {
+                                            snackbarHostState.showSnackbar("网络错误")
+                                        } finally {
+                                            isSubmittingRating = false
+                                        }
+                                    }
+                                },
+                                shape = RoundedCornerShape(8.dp),
+                                enabled = !isSubmittingRating
+                            ) {
+                                Text("提交评分")
+                            }
+                        }
+                        OutlinedButton(
                             onClick = {
                                 scope.launch {
-                                    isSubmittingRating = true
                                     try {
-                                        val resp = RetrofitClient.instance.submitRating(
-                                            SubmitRatingRequest(clubId = clubId, rating = currentRating.toString())
-                                        )
+                                        val resp = RetrofitClient.instance.cancelRating(clubId)
                                         if (resp.isSuccessful) {
-                                            val body = resp.body()
-                                            if (body != null && body.code == 200) {
-                                                snackbarHostState.showSnackbar("评分成功")
-                                            } else {
-                                                snackbarHostState.showSnackbar(body?.message ?: "评分失败")
-                                            }
+                                            currentRating = 0
+                                            snackbarHostState.showSnackbar("已取消评分")
                                         } else {
-                                            snackbarHostState.showSnackbar("评分失败")
+                                            snackbarHostState.showSnackbar("取消评分失败")
                                         }
                                     } catch (_: Exception) {
                                         snackbarHostState.showSnackbar("网络错误")
-                                    } finally {
-                                        isSubmittingRating = false
                                     }
                                 }
                             },
                             shape = RoundedCornerShape(8.dp),
-                            enabled = !isSubmittingRating
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFEF4444))
                         ) {
-                            Text("提交评分")
+                            Text("取消评分")
                         }
                     }
                 }
@@ -217,7 +275,7 @@ fun ClubDetailScreen(
                         isJoining = true
                         try {
                             val resp = RetrofitClient.instance.applyJoinClub(
-                                JoinClubRequest(clubId = clubId)
+                                com.clubmgmt.app.data.api.JoinClubRequest(clubId = clubId)
                             )
                             if (resp.isSuccessful) {
                                 val body = resp.body()
@@ -246,18 +304,6 @@ fun ClubDetailScreen(
                     Spacer(Modifier.width(8.dp))
                 }
                 Text("申请加入社团")
-            }
-
-            // 管理按钮
-            Button(
-                onClick = { onManageClub(safeClub.clubId) },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF374151))
-            ) {
-                Icon(Icons.Filled.Settings, null)
-                Spacer(Modifier.width(8.dp))
-                Text("管理社团")
             }
 
             Spacer(Modifier.height(16.dp))

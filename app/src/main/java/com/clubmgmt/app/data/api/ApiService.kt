@@ -115,9 +115,9 @@ interface ApiService {
     @PUT("api/activities")
     suspend fun updateActivity(@Body request: UpdateActivityRequest): Response<ApiStringResponse>
 
-    /** 结束活动 */
+    /** 结束活动（需提交活动总结和到场名单） */
     @PUT("api/activities/end")
-    suspend fun endActivity(@Query("activityId") activityId: String): Response<ApiStringResponse>
+    suspend fun endActivity(@Body request: ActivityEndRequest): Response<ApiStringResponse>
 
     /** 删除活动 */
     @DELETE("api/activities")

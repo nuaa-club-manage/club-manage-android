@@ -195,6 +195,12 @@ fun MainApp() {
                         },
                         onEnterAdmin = {
                             navController.navigate(Screen.AdminDashboard.route)
+                        },
+                        onLogout = {
+                            com.clubmgmt.app.data.SessionManager.logout()
+                            navController.navigate(Screen.Login.route) {
+                                popUpTo(0) { inclusive = true }
+                            }
                         }
                     )
                 }
@@ -207,10 +213,7 @@ fun MainApp() {
                     val clubId = backStackEntry.arguments?.getString("clubId") ?: ""
                     ClubDetailScreen(
                         clubId = clubId,
-                        onBack = { navController.popBackStack() },
-                        onManageClub = { id ->
-                            navController.navigate(Screen.ManageClub.createRoute(id))
-                        }
+                        onBack = { navController.popBackStack() }
                     )
                 }
                 composable(
