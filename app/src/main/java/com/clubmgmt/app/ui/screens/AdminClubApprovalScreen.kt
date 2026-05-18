@@ -1,5 +1,6 @@
 package com.clubmgmt.app.ui.screens
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -23,7 +24,9 @@ import com.clubmgmt.app.ui.theme.Red500
 import kotlinx.coroutines.launch
 
 @Composable
-fun AdminClubApprovalScreen() {
+fun AdminClubApprovalScreen(
+    onClubClick: (String) -> Unit = {}
+) {
     var searchText by remember { mutableStateOf("") }
     var pendingClubs by remember { mutableStateOf<List<ClubData>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
@@ -102,6 +105,7 @@ fun AdminClubApprovalScreen() {
                     items(filteredClubs, key = { it.clubId }) { club ->
                         PendingClubCard(
                             club = club,
+                            onClubClick = onClubClick,
                             onApprove = {
                                 scope.launch {
                                     try {
@@ -137,8 +141,12 @@ fun AdminClubApprovalScreen() {
 }
 
 @Composable
-private fun PendingClubCard(club: ClubData, onApprove: () -> Unit, onReject: () -> Unit) {
-    Card(shape = RoundedCornerShape(12.dp), elevation = CardDefaults.cardElevation(4.dp)) {
+private fun PendingClubCard(club: ClubData, onApprove: () -> Unit, onReject: () -> Unit, onClubClick: (String) -> Unit = {}) {
+    Card(
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(4.dp),
+        modifier = Modifier.clickable { onClubClick(club.clubId) }
+    ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(club.clubName, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
             if (club.school != null) {

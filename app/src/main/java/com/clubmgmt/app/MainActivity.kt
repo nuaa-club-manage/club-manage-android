@@ -306,7 +306,9 @@ fun MainApp() {
                         navController = navController,
                         currentRoute = Screen.AdminClubApproval.route
                     ) {
-                        AdminClubApprovalScreen()
+                        AdminClubApprovalScreen(
+                            onClubClick = { clubId -> navController.navigate(Screen.AdminClubDetail.createRoute(clubId)) }
+                        )
                     }
                 }
                 composable(Screen.AdminClubQuery.route) {
