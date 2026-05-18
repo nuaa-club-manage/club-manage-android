@@ -247,7 +247,8 @@ fun MainApp() {
                     val clubId = backStackEntry.arguments?.getString("clubId") ?: ""
                     ManageClubScreen(
                         clubId = clubId,
-                        onBack = { navController.popBackStack() }
+                        onBack = { navController.popBackStack() },
+                        onActivityClick = { actId -> navController.navigate(Screen.ActivityDetail.createRoute(actId)) }
                     )
                 }
 
@@ -340,7 +341,9 @@ fun MainApp() {
                         navController = navController,
                         currentRoute = Screen.AdminActivityApproval.route
                     ) {
-                        AdminActivityApprovalScreen()
+                        AdminActivityApprovalScreen(
+                            onActivityClick = { actId -> navController.navigate(Screen.ActivityDetail.createRoute(actId)) }
+                        )
                     }
                 }
             }

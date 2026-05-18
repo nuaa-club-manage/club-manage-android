@@ -1,5 +1,6 @@
 package com.clubmgmt.app.ui.screens
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -23,7 +24,9 @@ import com.clubmgmt.app.ui.theme.Red500
 import kotlinx.coroutines.launch
 
 @Composable
-fun AdminActivityApprovalScreen() {
+fun AdminActivityApprovalScreen(
+    onActivityClick: (String) -> Unit = {}
+) {
     var searchText by remember { mutableStateOf("") }
     var pendingActivities by remember { mutableStateOf<List<ActivityData>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
@@ -102,6 +105,7 @@ fun AdminActivityApprovalScreen() {
                     items(filteredActivities, key = { it.activityId }) { activity ->
                         PendingActivityCard(
                             activity = activity,
+                            onActivityClick = onActivityClick,
                             onApprove = {
                                 scope.launch {
                                     try {
@@ -137,8 +141,12 @@ fun AdminActivityApprovalScreen() {
 }
 
 @Composable
-private fun PendingActivityCard(activity: ActivityData, onApprove: () -> Unit, onReject: () -> Unit) {
-    Card(shape = RoundedCornerShape(12.dp), elevation = CardDefaults.cardElevation(4.dp)) {
+private fun PendingActivityCard(activity: ActivityData, onApprove: () -> Unit, onReject: () -> Unit, onActivityClick: (String) -> Unit = {}) {
+    Card(
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(4.dp),
+        modifier = Modifier.clickable { onActivityClick(activity.activityId) }
+    ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(activity.title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
             Text(activity.clubName, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)

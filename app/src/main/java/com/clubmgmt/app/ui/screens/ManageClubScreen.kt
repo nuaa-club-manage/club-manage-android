@@ -40,7 +40,8 @@ import kotlinx.coroutines.launch
 @Composable
 fun ManageClubScreen(
     clubId: String,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onActivityClick: (String) -> Unit = {}
 ) {
     var club by remember { mutableStateOf<com.clubmgmt.app.data.Club?>(null) }
     var isLoading by remember { mutableStateOf(true) }
@@ -127,7 +128,7 @@ fun ManageClubScreen(
 
             when (activeTab) {
                 0 -> MembersTab(members, pendingMembers, clubId, snackbarHostState, ::loadData)
-                1 -> ActivitiesTab(activities, clubId, snackbarHostState, ::loadData)
+                1 -> ActivitiesTab(activities, clubId, snackbarHostState, ::loadData, onActivityClick)
                 2 -> RegistrationsTab(pendingRegistrations, activities, selectedActId, { selectedActId = it }, participants, snackbarHostState, ::loadData)
                 3 -> SettingsTab(club!!, clubName, { clubName = it }, clubDescription, { clubDescription = it }, clubId, snackbarHostState, onBack)
             }
@@ -235,7 +236,8 @@ private fun ActivitiesTab(
     activities: List<ActivityData>,
     clubId: String,
     snackbarHostState: SnackbarHostState,
-    reload: () -> Unit
+    reload: () -> Unit,
+    onActivityClick: (String) -> Unit = {}
 ) {
     val scope = rememberCoroutineScope()
 
@@ -266,7 +268,10 @@ private fun ActivitiesTab(
         } else {
             activities.forEach { act ->
                 item {
-                    Card(shape = RoundedCornerShape(12.dp)) {
+                    Card(
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.clickable { onActivityClick(act.activityId) }
+                    ) {
                         Column(Modifier.padding(12.dp)) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Column(Modifier.weight(1f)) {
