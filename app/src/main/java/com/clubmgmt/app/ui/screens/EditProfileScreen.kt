@@ -203,6 +203,10 @@ fun EditProfileScreen(
                         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
                             Button(
                                 onClick = {
+                                    if (phoneNumber.isNotBlank() && (phoneNumber.length != 11 || !phoneNumber.all { it.isDigit() })) {
+                                        scope.launch { snackbarHostState.showSnackbar("手机号格式不正确，请输入11位数字") }
+                                        return@Button
+                                    }
                                     scope.launch {
                                         isSavingInfo = true
                                         try {
