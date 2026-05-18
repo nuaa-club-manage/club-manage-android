@@ -69,6 +69,10 @@ fun AdminUserManagementScreen(
         }
     }
 
+    LaunchedEffect(Unit) {
+        doSearch(1)
+    }
+
     Scaffold(snackbarHost = { SnackbarHost(snackbarHostState) }) {
         Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
             Text("用户管理", style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.ExtraBold)

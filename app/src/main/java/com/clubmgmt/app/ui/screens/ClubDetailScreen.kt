@@ -55,7 +55,7 @@ fun ClubDetailScreen(
                 val appBody = appResp.body()
                 if (appBody != null && appBody.code == 200) {
                     val match = appBody.data?.find { it.clubId == clubId }
-                    if (match != null && match.reviewState == "已通过") {
+                    if (match != null && match.reviewState == "通过") {
                         isMember = true
                     }
                 }
@@ -69,6 +69,17 @@ fun ClubDetailScreen(
                     if (match != null) {
                         averageScore = match.averageScore ?: 0.0
                         ratingCount = match.ratingCount ?: 0
+                    }
+                }
+            }
+            // 获取当前用户的评分
+            val myRatingResp = RetrofitClient.instance.getMyRatingForClub(clubId)
+            if (myRatingResp.isSuccessful) {
+                val myRatingBody = myRatingResp.body()
+                if (myRatingBody != null && myRatingBody.code == 200) {
+                    val data = myRatingBody.data
+                    if (data != null && data.rating != null) {
+                        currentRating = data.rating.toIntOrNull() ?: 0
                     }
                 }
             }
@@ -120,6 +131,7 @@ fun ClubDetailScreen(
         ) {
             // 社团名称和学校
             Card(
+                modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
                 elevation = CardDefaults.cardElevation(2.dp)
             ) {
@@ -142,6 +154,7 @@ fun ClubDetailScreen(
 
             // 关于社团
             Card(
+                modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
                 elevation = CardDefaults.cardElevation(2.dp)
             ) {
@@ -154,6 +167,7 @@ fun ClubDetailScreen(
 
             // 社团状态
             Card(
+                modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
                 elevation = CardDefaults.cardElevation(2.dp)
             ) {
@@ -184,6 +198,7 @@ fun ClubDetailScreen(
             // 平均分展示
             if (ratingCount > 0) {
                 Card(
+                    modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
                     elevation = CardDefaults.cardElevation(2.dp)
                 ) {
@@ -207,6 +222,7 @@ fun ClubDetailScreen(
 
             // 用户评分
             Card(
+                modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
                 elevation = CardDefaults.cardElevation(2.dp)
             ) {
@@ -257,27 +273,27 @@ fun ClubDetailScreen(
                             ) {
                                 Text("提交评分")
                             }
-                        }
-                        OutlinedButton(
-                            onClick = {
-                                scope.launch {
-                                    try {
-                                        val resp = RetrofitClient.instance.cancelRating(clubId)
-                                        if (resp.isSuccessful) {
-                                            currentRating = 0
-                                            snackbarHostState.showSnackbar("已取消评分")
-                                        } else {
-                                            snackbarHostState.showSnackbar("取消评分失败")
+                            OutlinedButton(
+                                onClick = {
+                                    scope.launch {
+                                        try {
+                                            val resp = RetrofitClient.instance.cancelRating(clubId)
+                                            if (resp.isSuccessful) {
+                                                currentRating = 0
+                                                snackbarHostState.showSnackbar("已取消评分")
+                                            } else {
+                                                snackbarHostState.showSnackbar("取消评分失败")
+                                            }
+                                        } catch (_: Exception) {
+                                            snackbarHostState.showSnackbar("网络错误")
                                         }
-                                    } catch (_: Exception) {
-                                        snackbarHostState.showSnackbar("网络错误")
                                     }
-                                }
-                            },
-                            shape = RoundedCornerShape(8.dp),
-                            colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFEF4444))
-                        ) {
-                            Text("取消评分")
+                                },
+                                shape = RoundedCornerShape(8.dp),
+                                colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFEF4444))
+                            ) {
+                                Text("取消评分")
+                            }
                         }
                     }
                 }

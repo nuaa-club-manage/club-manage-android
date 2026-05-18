@@ -135,6 +135,10 @@ interface ApiService {
     @GET("api/activities/my")
     suspend fun getMyActivities(): Response<ActivityListResponse>
 
+    /** 查看指定社团的所有活动（社团管理员专用） */
+    @GET("api/activities/club")
+    suspend fun getClubActivities(@Query("clubId") clubId: String): Response<ActivityListResponse>
+
     // ======================== 活动报名 ========================
 
     /** 用户报名活动 */

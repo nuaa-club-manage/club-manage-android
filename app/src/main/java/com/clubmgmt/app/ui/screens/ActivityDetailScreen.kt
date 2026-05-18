@@ -110,6 +110,7 @@ fun ActivityDetailScreen(
         ) {
             // 活动标题和社团
             Card(
+                modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
                 elevation = CardDefaults.cardElevation(2.dp)
             ) {
@@ -132,6 +133,7 @@ fun ActivityDetailScreen(
 
             // 活动详情
             Card(
+                modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
                 elevation = CardDefaults.cardElevation(2.dp)
             ) {
@@ -144,6 +146,7 @@ fun ActivityDetailScreen(
 
             // 活动信息
             Card(
+                modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
                 elevation = CardDefaults.cardElevation(2.dp)
             ) {

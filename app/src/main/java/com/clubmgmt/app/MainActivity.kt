@@ -117,8 +117,8 @@ fun MainApp() {
                 composable(Screen.Register.route) {
                     RegisterScreen(
                         onRegisterSuccess = {
-                            navController.navigate(Screen.Home.route) {
-                                popUpTo(Screen.Login.route) { inclusive = true }
+                            navController.navigate(Screen.Login.route) {
+                                popUpTo(Screen.Register.route) { inclusive = true }
                             }
                         },
                         onNavigateLogin = {
@@ -266,6 +266,9 @@ fun MainApp() {
                             },
                             onNavigateActivities = {
                                 navController.navigate(Screen.AdminActivityApproval.route)
+                            },
+                            onNavigateClubQuery = {
+                                navController.navigate(Screen.AdminClubQuery.route)
                             }
                         )
                     }
@@ -386,9 +389,8 @@ fun AdminScreenWrapper(
                         onClick = {
                             if (currentRoute != item.route) {
                                 navController.navigate(item.route) {
-                                    popUpTo(Screen.AdminDashboard.route) { saveState = true }
+                                    popUpTo(0) { inclusive = true }
                                     launchSingleTop = true
-                                    restoreState = true
                                 }
                             }
                             scope.launch { drawerState.close() }

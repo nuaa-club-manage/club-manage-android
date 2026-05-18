@@ -81,9 +81,9 @@ fun ManageClubScreen(
                     pendingMembers = pendingResp.body()?.data?.filter { it.clubId == clubId } ?: emptyList()
                 }
 
-                val actResp = RetrofitClient.instance.getActivities()
+                val actResp = RetrofitClient.instance.getClubActivities(clubId)
                 if (actResp.isSuccessful) {
-                    activities = actResp.body()?.data?.filter { it.clubId == clubId } ?: emptyList()
+                    activities = actResp.body()?.data ?: emptyList()
                 }
 
                 val regResp = RetrofitClient.instance.getPendingRegistrations()
@@ -314,21 +314,23 @@ private fun ActivitiesTab(
                                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6B7280))
                                     ) { Text("结束活动") }
                                 }
-                                Button(
-                                    onClick = {
-                                        scope.launch {
-                                            try {
-                                                val resp = RetrofitClient.instance.deleteActivity(act.activityId)
-                                                if (resp.isSuccessful) reload()
-                                            } catch (_: Exception) { }
-                                        }
-                                    },
-                                    shape = RoundedCornerShape(8.dp),
-                                    colors = ButtonDefaults.buttonColors(containerColor = Red500)
-                                ) {
-                                    Icon(Icons.Filled.Delete, null, Modifier.size(16.dp))
-                                    Spacer(Modifier.width(4.dp))
-                                    Text("删除")
+                                if (act.activityState != "已结束") {
+                                    Button(
+                                        onClick = {
+                                            scope.launch {
+                                                try {
+                                                    val resp = RetrofitClient.instance.deleteActivity(act.activityId)
+                                                    if (resp.isSuccessful) reload()
+                                                } catch (_: Exception) { }
+                                            }
+                                        },
+                                        shape = RoundedCornerShape(8.dp),
+                                        colors = ButtonDefaults.buttonColors(containerColor = Red500)
+                                    ) {
+                                        Icon(Icons.Filled.Delete, null, Modifier.size(16.dp))
+                                        Spacer(Modifier.width(4.dp))
+                                        Text("删除")
+                                    }
                                 }
                             }
                         }

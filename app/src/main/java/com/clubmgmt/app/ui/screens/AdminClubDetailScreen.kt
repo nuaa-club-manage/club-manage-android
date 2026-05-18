@@ -45,9 +45,9 @@ fun AdminClubDetailScreen(
                         club = body.data?.toClub()
                     }
                 }
-                val memberResp = RetrofitClient.instance.getClubMembers(clubId = clubId)
+                val memberResp = RetrofitClient.instance.getAllClubMembers()
                 if (memberResp.isSuccessful) {
-                    members = memberResp.body()?.data ?: emptyList()
+                    members = memberResp.body()?.data?.filter { it.clubId == clubId } ?: emptyList()
                 }
             } catch (_: Exception) {
                 snackbarHostState.showSnackbar("网络错误")

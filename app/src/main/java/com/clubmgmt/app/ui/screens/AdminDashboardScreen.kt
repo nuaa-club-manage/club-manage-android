@@ -6,6 +6,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.People
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -20,7 +21,8 @@ import androidx.compose.ui.unit.dp
 fun AdminDashboardScreen(
     onNavigateUsers: () -> Unit,
     onNavigateClubs: () -> Unit,
-    onNavigateActivities: () -> Unit
+    onNavigateActivities: () -> Unit,
+    onNavigateClubQuery: () -> Unit
 ) {
     Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
         Text(
@@ -30,30 +32,34 @@ fun AdminDashboardScreen(
         )
         Spacer(modifier = Modifier.height(24.dp))
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
+        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
             StatCard(
                 title = "用户管理",
                 icon = Icons.Filled.People,
                 color = Color(0xFFA855F7),
                 onClick = onNavigateUsers,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.fillMaxWidth()
             )
             StatCard(
                 title = "社团审核",
                 icon = Icons.Filled.Groups,
                 color = Color(0xFF3B82F6),
                 onClick = onNavigateClubs,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.fillMaxWidth()
+            )
+            StatCard(
+                title = "社团查询",
+                icon = Icons.Filled.Search,
+                color = Color(0xFFF59E0B),
+                onClick = onNavigateClubQuery,
+                modifier = Modifier.fillMaxWidth()
             )
             StatCard(
                 title = "活动审核",
                 icon = Icons.Filled.CalendarToday,
                 color = Color(0xFF22C55E),
                 onClick = onNavigateActivities,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.fillMaxWidth()
             )
         }
     }

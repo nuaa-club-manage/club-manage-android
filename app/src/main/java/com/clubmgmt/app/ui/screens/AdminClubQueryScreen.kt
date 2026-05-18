@@ -48,6 +48,10 @@ fun AdminClubQueryScreen(
         }
     }
 
+    LaunchedEffect(Unit) {
+        doSearch()
+    }
+
     Scaffold(snackbarHost = { SnackbarHost(snackbarHostState) }) {
         Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
             Text("社团查询", style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.ExtraBold)

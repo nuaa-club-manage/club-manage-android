@@ -21,6 +21,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+import com.clubmgmt.app.data.SessionManager
 import com.clubmgmt.app.data.api.RetrofitClient
 import com.clubmgmt.app.data.api.RegisterRequest
 import com.clubmgmt.app.ui.theme.Indigo600
@@ -109,6 +110,7 @@ fun RegisterScreen(
                     val body = response.body()
                     if (body != null && body.code == 200) {
                         snackbarHostState.showSnackbar(body.message)
+                        SessionManager.logout()
                         onRegisterSuccess()
                     } else {
                         snackbarHostState.showSnackbar(body?.message ?: "注册失败")
