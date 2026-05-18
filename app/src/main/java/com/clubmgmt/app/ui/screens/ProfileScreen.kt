@@ -408,7 +408,7 @@ fun ProfileScreen(
                                         Row(verticalAlignment = Alignment.CenterVertically) {
                                             StatusBadge(reg.reviewState.orEmpty())
                                         }
-                                        if (reg.reviewState == "待审核" || reg.reviewState == "pending") {
+                                        if (reg.registrationId != null) {
                                             Spacer(Modifier.height(8.dp))
                                             OutlinedButton(
                                                 onClick = {
@@ -420,9 +420,11 @@ fun ProfileScreen(
                                                             if (resp.isSuccessful) {
                                                                 myRegistrations = myRegistrations?.filter { it.registrationId != reg.registrationId }
                                                                 snackbarHostState.showSnackbar("已取消报名")
+                                                            } else {
+                                                                snackbarHostState.showSnackbar("取消失败")
                                                             }
                                                         } catch (_: Exception) {
-                                                            snackbarHostState.showSnackbar("取消失败")
+                                                            snackbarHostState.showSnackbar("网络错误")
                                                         }
                                                     }
                                                 },

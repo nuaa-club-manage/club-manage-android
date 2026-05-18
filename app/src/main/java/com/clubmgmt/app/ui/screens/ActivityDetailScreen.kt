@@ -5,6 +5,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material3.*
@@ -14,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.clubmgmt.app.data.api.CancelRegistrationRequest
 import com.clubmgmt.app.data.api.RegisterActivityRequest
 import com.clubmgmt.app.data.api.RetrofitClient
 import com.clubmgmt.app.data.toActivity
@@ -31,6 +33,10 @@ fun ActivityDetailScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
+    // 当前用户是否已报名
+    var registeredId by remember { mutableStateOf<String?>(null) }
+    var isCancelling by remember { mutableStateOf(false) }
+
     LaunchedEffect(activityId) {
         try {
             val resp = RetrofitClient.instance.getActivityDetail(activityId)
@@ -38,6 +44,17 @@ fun ActivityDetailScreen(
                 val body = resp.body()
                 if (body != null && body.code == 200) {
                     activity = body.data?.toActivity()
+                }
+            }
+            // 检查当前用户是否已报名此活动
+            val regResp = RetrofitClient.instance.getMyRegistrations()
+            if (regResp.isSuccessful) {
+                val regBody = regResp.body()
+                if (regBody != null && regBody.code == 200) {
+                    val match = regBody.data?.find { it.activityId == activityId }
+                    if (match != null) {
+                        registeredId = match.registrationId
+                    }
                 }
             }
         } catch (_: Exception) {
@@ -77,7 +94,7 @@ fun ActivityDetailScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 IconButton(onClick = onBack) {
-                    Text("← 返回", color = Indigo600)
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
                 }
             }
         },
@@ -144,15 +161,56 @@ fun ActivityDetailScreen(
                 }
             }
 
-            // 报名按钮
-            Button(
-                onClick = { showRegisterDialog = true },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Indigo600)
-            ) {
-                Text("报名参加")
+            // 若是自己发布的活动则不显示报名/取消按钮
+            val isMyActivity = safeActivity.userId == com.clubmgmt.app.data.SessionManager.userId
+
+            if (!isMyActivity) {
+            // 报名/取消报名按钮
+            if (registeredId != null) {
+                // 已报名 → 显示取消报名
+                OutlinedButton(
+                    onClick = {
+                        scope.launch {
+                            isCancelling = true
+                            try {
+                                val resp = RetrofitClient.instance.cancelRegistration(
+                                    CancelRegistrationRequest(registrationID = registeredId!!)
+                                )
+                                if (resp.isSuccessful) {
+                                    registeredId = null
+                                    snackbarHostState.showSnackbar("已取消报名")
+                                } else {
+                                    snackbarHostState.showSnackbar("取消报名失败")
+                                }
+                            } catch (_: Exception) {
+                                snackbarHostState.showSnackbar("网络错误")
+                            } finally {
+                                isCancelling = false
+                            }
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFEF4444)),
+                    enabled = !isCancelling
+                ) {
+                    if (isCancelling) {
+                        CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp, color = Color(0xFFEF4444))
+                        Spacer(Modifier.width(8.dp))
+                    }
+                    Text("取消报名")
+                }
+            } else {
+                Button(
+                    onClick = { showRegisterDialog = true },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Indigo600)
+                ) {
+                    Text("报名参加")
+                }
             }
+            } // end !isMyActivity
 
             Spacer(Modifier.height(16.dp))
         }

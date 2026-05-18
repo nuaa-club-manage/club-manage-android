@@ -24,7 +24,7 @@ fun AdminDashboardScreen(
 ) {
     Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
         Text(
-            text = "管理仪表盘",
+            text = "管理菜单",
             style = MaterialTheme.typography.headlineLarge,
             fontWeight = FontWeight.ExtraBold
         )

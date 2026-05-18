@@ -5,6 +5,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
@@ -22,10 +23,10 @@ import com.clubmgmt.app.data.api.AuditRegistrationRequest
 import com.clubmgmt.app.data.api.ClubMemberAuditData
 import com.clubmgmt.app.data.api.ClubMemberListData
 import com.clubmgmt.app.data.api.DissolveClubRequest
-import com.clubmgmt.app.data.api.LeaveClubRequest
 import com.clubmgmt.app.data.api.RegistrationAuditData
 import com.clubmgmt.app.data.api.RetrofitClient
 import com.clubmgmt.app.data.api.SetClubManagerRequest
+import com.clubmgmt.app.data.api.UpdateActivityRequest
 import com.clubmgmt.app.data.api.UpdateClubRequest
 import com.clubmgmt.app.data.toClub
 import com.clubmgmt.app.ui.theme.Indigo600
@@ -109,7 +110,7 @@ fun ManageClubScreen(
     Scaffold(snackbarHost = { SnackbarHost(snackbarHostState) }) {
         Column(Modifier.fillMaxSize().padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = onBack) { Text("← 返回", color = Indigo600) }
+                IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回") }
                 Spacer(Modifier.width(8.dp))
                 Text("管理: ${club!!.clubName}", style = MaterialTheme.typography.headlineMedium)
             }
@@ -251,6 +252,15 @@ private fun ActivitiesTab(
     var summary by remember { mutableStateOf("") }
     var participantList by remember { mutableStateOf("") }
 
+    // 编辑活动对话框状态
+    var showEditDialog by remember { mutableStateOf(false) }
+    var editActId by remember { mutableStateOf("") }
+    var editTitle by remember { mutableStateOf("") }
+    var editContent by remember { mutableStateOf("") }
+    var editLocation by remember { mutableStateOf("") }
+    var editCapacity by remember { mutableStateOf("") }
+    var isSavingEdit by remember { mutableStateOf(false) }
+
     LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 12.dp)) {
         item {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
@@ -277,6 +287,20 @@ private fun ActivitiesTab(
                             }
                             Spacer(Modifier.height(8.dp))
                             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                // 编辑按钮（非已结束的活动可编辑）
+                                if (act.activityState != "已结束") {
+                                    OutlinedButton(
+                                        onClick = {
+                                            editActId = act.activityId
+                                            editTitle = act.title
+                                            editContent = act.content ?: ""
+                                            editLocation = act.location ?: ""
+                                            editCapacity = if ((act.capacityLimit ?: 0) > 0) (act.capacityLimit ?: 0).toString() else ""
+                                            showEditDialog = true
+                                        },
+                                        shape = RoundedCornerShape(8.dp)
+                                    ) { Text("编辑") }
+                                }
                                 if (act.activityState == "已发布") {
                                     Button(
                                         onClick = {
@@ -314,7 +338,89 @@ private fun ActivitiesTab(
         }
     }
 
-    // 结束活动对话框
+    // 编辑活动对话框
+    if (showEditDialog) {
+        AlertDialog(
+            onDismissRequest = { showEditDialog = false },
+            title = { Text("编辑活动") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    OutlinedTextField(
+                        value = editTitle,
+                        onValueChange = { editTitle = it },
+                        label = { Text("活动标题") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        shape = RoundedCornerShape(8.dp)
+                    )
+                    OutlinedTextField(
+                        value = editContent,
+                        onValueChange = { editContent = it },
+                        label = { Text("活动内容") },
+                        modifier = Modifier.fillMaxWidth(),
+                        minLines = 3,
+                        shape = RoundedCornerShape(8.dp)
+                    )
+                    OutlinedTextField(
+                        value = editLocation,
+                        onValueChange = { editLocation = it },
+                        label = { Text("活动地点") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        shape = RoundedCornerShape(8.dp)
+                    )
+                    OutlinedTextField(
+                        value = editCapacity,
+                        onValueChange = { editCapacity = it.filter { c -> c.isDigit() } },
+                        label = { Text("人数限制（0 表示不限制）") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        shape = RoundedCornerShape(8.dp)
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        if (editTitle.isBlank()) {
+                            scope.launch { snackbarHostState.showSnackbar("请输入活动标题") }
+                            return@Button
+                        }
+                        isSavingEdit = true
+                        showEditDialog = false
+                        scope.launch {
+                            try {
+                                val resp = RetrofitClient.instance.updateActivity(
+                                    UpdateActivityRequest(
+                                        activityId = editActId,
+                                        title = editTitle,
+                                        content = editContent,
+                                        location = editLocation,
+                                        capacityLimit = editCapacity.toIntOrNull() ?: 0
+                                    )
+                                )
+                                if (resp.isSuccessful) {
+                                    snackbarHostState.showSnackbar("活动信息已更新")
+                                    reload()
+                                } else {
+                                    snackbarHostState.showSnackbar("更新失败")
+                                }
+                            } catch (_: Exception) {
+                                snackbarHostState.showSnackbar("网络错误")
+                            } finally {
+                                isSavingEdit = false
+                            }
+                        }
+                    },
+                    shape = RoundedCornerShape(8.dp),
+                    enabled = editTitle.isNotBlank() && !isSavingEdit
+                ) { Text("保存") }
+            },
+            dismissButton = { TextButton(onClick = { showEditDialog = false }) { Text("取消") } }
+        )
+    }
+
+    // 结束活动对话框（省略，保持不变）
     if (showEndDialog) {
         AlertDialog(
             onDismissRequest = { showEndDialog = false },
@@ -530,7 +636,6 @@ private fun SettingsTab(
     onBack: () -> Unit
 ) {
     var showDisbandDialog by remember { mutableStateOf(false) }
-    var showLeaveDialog by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
     Column(
@@ -558,14 +663,6 @@ private fun SettingsTab(
             }
         }
 
-        // 退出社团
-        OutlinedButton(
-            onClick = { showLeaveDialog = true },
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(8.dp),
-            colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFF59E0B))
-        ) { Text("退出社团") }
-
         // 危险区域
         Card(shape = RoundedCornerShape(12.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)) {
             Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -573,27 +670,6 @@ private fun SettingsTab(
                 Text("解散社团是一个不可逆的操作。所有社团数据将被永久删除。")
                 Button(onClick = { showDisbandDialog = true }, shape = RoundedCornerShape(8.dp), colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)) { Text("解散社团") }
             }
-        }
-
-        if (showLeaveDialog) {
-            AlertDialog(
-                onDismissRequest = { showLeaveDialog = false },
-                title = { Text("确认退出") },
-                text = { Text("确定要退出社团 \"${club.clubName}\" 吗？") },
-                confirmButton = { Button(onClick = {
-                    showLeaveDialog = false
-                    scope.launch {
-                        try {
-                            val resp = RetrofitClient.instance.leaveClub(LeaveClubRequest(clubId))
-                            if (resp.isSuccessful) {
-                                snackbarHostState.showSnackbar("已退出社团")
-                                onBack()
-                            }
-                        } catch (_: Exception) { snackbarHostState.showSnackbar("操作失败") }
-                    }
-                }, colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF59E0B))) { Text("确认退出") } },
-                dismissButton = { TextButton(onClick = { showLeaveDialog = false }) { Text("取消") } }
-            )
         }
 
         if (showDisbandDialog) {

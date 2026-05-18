@@ -5,6 +5,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -13,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.clubmgmt.app.data.api.LeaveClubRequest
 import com.clubmgmt.app.data.api.RetrofitClient
 import com.clubmgmt.app.data.api.SubmitRatingRequest
 import com.clubmgmt.app.data.toClub
@@ -35,6 +37,8 @@ fun ClubDetailScreen(
     var isJoining by remember { mutableStateOf(false) }
     var averageScore by remember { mutableStateOf(0.0) }
     var ratingCount by remember { mutableStateOf(0) }
+    var isMember by remember { mutableStateOf(false) }
+    var isLeaving by remember { mutableStateOf(false) }
 
     LaunchedEffect(clubId) {
         try {
@@ -43,6 +47,17 @@ fun ClubDetailScreen(
                 val body = resp.body()
                 if (body != null && body.code == 200) {
                     club = body.data?.toClub()
+                }
+            }
+            // 检查当前用户是否已是该社团成员
+            val appResp = RetrofitClient.instance.getMyApplications()
+            if (appResp.isSuccessful) {
+                val appBody = appResp.body()
+                if (appBody != null && appBody.code == 200) {
+                    val match = appBody.data?.find { it.clubId == clubId }
+                    if (match != null && match.reviewState == "已通过") {
+                        isMember = true
+                    }
                 }
             }
             // 获取平均分
@@ -89,7 +104,7 @@ fun ClubDetailScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 IconButton(onClick = onBack) {
-                    Text("← 返回", color = Indigo600)
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
                 }
             }
         },
@@ -268,42 +283,75 @@ fun ClubDetailScreen(
                 }
             }
 
-            // 申请加入社团
-            Button(
-                onClick = {
-                    scope.launch {
-                        isJoining = true
-                        try {
-                            val resp = RetrofitClient.instance.applyJoinClub(
-                                com.clubmgmt.app.data.api.JoinClubRequest(clubId = clubId)
-                            )
-                            if (resp.isSuccessful) {
-                                val body = resp.body()
-                                if (body != null && body.code == 200) {
-                                    snackbarHostState.showSnackbar("入社申请已提交，请等待审核")
+            // 根据成员状态显示退出/加入按钮
+            if (isMember) {
+                OutlinedButton(
+                    onClick = {
+                        scope.launch {
+                            isLeaving = true
+                            try {
+                                val resp = RetrofitClient.instance.leaveClub(LeaveClubRequest(clubId = clubId))
+                                if (resp.isSuccessful) {
+                                    isMember = false
+                                    snackbarHostState.showSnackbar("已退出社团")
                                 } else {
-                                    snackbarHostState.showSnackbar(body?.message ?: "申请失败")
+                                    snackbarHostState.showSnackbar("退出失败")
                                 }
-                            } else {
-                                snackbarHostState.showSnackbar("申请失败")
+                            } catch (_: Exception) {
+                                snackbarHostState.showSnackbar("网络错误")
+                            } finally {
+                                isLeaving = false
                             }
-                        } catch (_: Exception) {
-                            snackbarHostState.showSnackbar("网络错误")
-                        } finally {
-                            isJoining = false
                         }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFEF4444)),
+                    enabled = !isLeaving
+                ) {
+                    if (isLeaving) {
+                        CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp, color = Color(0xFFEF4444))
+                        Spacer(Modifier.width(8.dp))
                     }
-                },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Indigo600),
-                enabled = !isJoining
-            ) {
-                if (isJoining) {
-                    CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp, color = MaterialTheme.colorScheme.onPrimary)
-                    Spacer(Modifier.width(8.dp))
+                    Text("退出社团")
                 }
-                Text("申请加入社团")
+            } else {
+                Button(
+                    onClick = {
+                        scope.launch {
+                            isJoining = true
+                            try {
+                                val resp = RetrofitClient.instance.applyJoinClub(
+                                    com.clubmgmt.app.data.api.JoinClubRequest(clubId = clubId)
+                                )
+                                if (resp.isSuccessful) {
+                                    val body = resp.body()
+                                    if (body != null && body.code == 200) {
+                                        snackbarHostState.showSnackbar("入社申请已提交，请等待审核")
+                                    } else {
+                                        snackbarHostState.showSnackbar(body?.message ?: "申请失败")
+                                    }
+                                } else {
+                                    snackbarHostState.showSnackbar("申请失败")
+                                }
+                            } catch (_: Exception) {
+                                snackbarHostState.showSnackbar("网络错误")
+                            } finally {
+                                isJoining = false
+                            }
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Indigo600),
+                    enabled = !isJoining
+                ) {
+                    if (isJoining) {
+                        CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp, color = MaterialTheme.colorScheme.onPrimary)
+                        Spacer(Modifier.width(8.dp))
+                    }
+                    Text("申请加入社团")
+                }
             }
 
             Spacer(Modifier.height(16.dp))

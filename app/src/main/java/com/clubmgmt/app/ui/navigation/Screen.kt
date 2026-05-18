@@ -35,5 +35,9 @@ sealed class Screen(val route: String) {
         fun createRoute(userId: String) = "admin/users/$userId"
     }
     data object AdminClubApproval : Screen("admin/clubs")
+    data object AdminClubQuery : Screen("admin/clubs/query")
+    data object AdminClubDetail : Screen("admin/clubs/{clubId}/detail") {
+        fun createRoute(clubId: String) = "admin/clubs/$clubId/detail"
+    }
     data object AdminActivityApproval : Screen("admin/activities")
 }

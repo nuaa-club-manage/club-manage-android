@@ -3,7 +3,6 @@ package com.clubmgmt.app
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -22,7 +21,6 @@ import com.clubmgmt.app.data.SessionManager
 import com.clubmgmt.app.ui.navigation.Screen
 import com.clubmgmt.app.ui.screens.*
 import com.clubmgmt.app.ui.theme.ClubManagementTheme
-import com.clubmgmt.app.ui.theme.Indigo600
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -194,7 +192,9 @@ fun MainApp() {
                             navController.navigate(Screen.ActivityDetail.createRoute(activityId))
                         },
                         onEnterAdmin = {
-                            navController.navigate(Screen.AdminDashboard.route)
+                            navController.navigate(Screen.AdminDashboard.route) {
+                                popUpTo(Screen.Profile.route) { inclusive = true }
+                            }
                         },
                         onLogout = {
                             com.clubmgmt.app.data.SessionManager.logout()
@@ -305,6 +305,33 @@ fun MainApp() {
                         AdminClubApprovalScreen()
                     }
                 }
+                composable(Screen.AdminClubQuery.route) {
+                    AdminScreenWrapper(
+                        navController = navController,
+                        currentRoute = Screen.AdminClubQuery.route
+                    ) {
+                        AdminClubQueryScreen(
+                            onClubClick = { clubId ->
+                                navController.navigate(Screen.AdminClubDetail.createRoute(clubId))
+                            }
+                        )
+                    }
+                }
+                composable(
+                    route = Screen.AdminClubDetail.route,
+                    arguments = listOf(navArgument("clubId") { type = NavType.StringType })
+                ) { backStackEntry ->
+                    val clubId = backStackEntry.arguments?.getString("clubId") ?: ""
+                    AdminScreenWrapper(
+                        navController = navController,
+                        currentRoute = Screen.AdminClubDetail.route
+                    ) {
+                        AdminClubDetailScreen(
+                            clubId = clubId,
+                            onBack = { navController.popBackStack() }
+                        )
+                    }
+                }
                 composable(Screen.AdminActivityApproval.route) {
                     AdminScreenWrapper(
                         navController = navController,
@@ -331,9 +358,10 @@ fun AdminScreenWrapper(
     val scope = rememberCoroutineScope()
 
     val adminNavItems = listOf(
-        AdminNavItem("仪表盘", Icons.Filled.Dashboard, Screen.AdminDashboard.route),
+        AdminNavItem("菜单", Icons.Filled.Dashboard, Screen.AdminDashboard.route),
         AdminNavItem("用户管理", Icons.Filled.People, Screen.AdminUsers.route),
         AdminNavItem("社团审核", Icons.Filled.Groups, Screen.AdminClubApproval.route),
+        AdminNavItem("社团查询", Icons.Filled.Search, Screen.AdminClubQuery.route),
         AdminNavItem("活动审核", Icons.Filled.CalendarToday, Screen.AdminActivityApproval.route)
     )
 
@@ -354,7 +382,7 @@ fun AdminScreenWrapper(
                     NavigationDrawerItem(
                         icon = { Icon(item.icon, null, modifier = Modifier.size(22.dp)) },
                         label = { Text(item.label, fontWeight = FontWeight.Medium) },
-                        selected = currentRoute == item.route || (item.route == Screen.AdminUsers.route && currentRoute.startsWith("admin/users/")),
+                        selected = currentRoute == item.route || (item.route == Screen.AdminUsers.route && currentRoute.startsWith("admin/users/")) || (item.route == Screen.AdminClubQuery.route && currentRoute != null && currentRoute.startsWith("admin/clubs/") && currentRoute != Screen.AdminClubApproval.route),
                         onClick = {
                             if (currentRoute != item.route) {
                                 navController.navigate(item.route) {
@@ -380,15 +408,7 @@ fun AdminScreenWrapper(
                             Icon(Icons.Filled.Menu, contentDescription = "菜单")
                         }
                     },
-                    actions = {
-                        IconButton(onClick = {
-                            navController.navigate(Screen.Home.route) {
-                                popUpTo(Screen.AdminDashboard.route) { inclusive = true }
-                            }
-                        }) {
-                            Text("返回", fontSize = 14.sp, color = Indigo600)
-                        }
-                    },
+                    actions = {},
                     colors = TopAppBarDefaults.topAppBarColors(
                         containerColor = MaterialTheme.colorScheme.surface
                     )
