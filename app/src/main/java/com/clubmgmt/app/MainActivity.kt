@@ -382,7 +382,7 @@ fun AdminScreenWrapper(
                     NavigationDrawerItem(
                         icon = { Icon(item.icon, null, modifier = Modifier.size(22.dp)) },
                         label = { Text(item.label, fontWeight = FontWeight.Medium) },
-                        selected = currentRoute == item.route || (item.route == Screen.AdminUsers.route && currentRoute.startsWith("admin/users/")) || (item.route == Screen.AdminClubQuery.route && currentRoute != null && currentRoute.startsWith("admin/clubs/") && currentRoute != Screen.AdminClubApproval.route),
+                        selected = currentRoute == item.route || (item.route == Screen.AdminUsers.route && currentRoute.startsWith("admin/users/")) || (item.route == Screen.AdminClubQuery.route && currentRoute.startsWith("admin/clubs/") && currentRoute != Screen.AdminClubApproval.route),
                         onClick = {
                             if (currentRoute != item.route) {
                                 navController.navigate(item.route) {

@@ -408,9 +408,8 @@ fun ProfileScreen(
                                         Row(verticalAlignment = Alignment.CenterVertically) {
                                             StatusBadge(reg.reviewState.orEmpty())
                                         }
-                                        if (reg.registrationId != null) {
-                                            Spacer(Modifier.height(8.dp))
-                                            OutlinedButton(
+                                        Spacer(Modifier.height(8.dp))
+                                        OutlinedButton(
                                                 onClick = {
                                                     scope.launch {
                                                         try {
@@ -437,7 +436,6 @@ fun ProfileScreen(
                                     }
                                 }
                             }
-                        }
                     }
 
                     3 -> { // 我发布的活动
