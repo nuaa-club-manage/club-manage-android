@@ -396,10 +396,10 @@ fun ProfileScreen(
                                             style = MaterialTheme.typography.titleMedium,
                                             fontWeight = FontWeight.Bold
                                         )
-                                        if (reg.clubId != null) {
+                                        if (reg.clubName != null) {
                                             Spacer(Modifier.height(2.dp))
                                             Text(
-                                                "社团: ${reg.clubId}",
+                                                "社团: ${reg.clubName}",
                                                 style = MaterialTheme.typography.bodySmall,
                                                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
                                             )

@@ -33,6 +33,7 @@ import com.clubmgmt.app.ui.theme.Green500
 import com.clubmgmt.app.ui.theme.Red500
 import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ManageClubScreen(
     clubId: String,
@@ -154,7 +155,7 @@ private fun MembersTab(
                     Card(shape = RoundedCornerShape(12.dp)) {
                         Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
                             Column(Modifier.weight(1f)) {
-                                Text(request.realName.ifBlank { request.userName }, style = MaterialTheme.typography.titleMedium)
+                                Text(request.realName.orEmpty().ifBlank { request.userName }, style = MaterialTheme.typography.titleMedium)
                                 Text("学号: ${request.userId}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
                             }
                             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -195,7 +196,7 @@ private fun MembersTab(
                         Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
                             Column(Modifier.weight(1f)) {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Text(m.realName.ifBlank { m.userName }, style = MaterialTheme.typography.titleMedium)
+                                    Text(m.realName.orEmpty().ifBlank { m.userName }, style = MaterialTheme.typography.titleMedium)
                                     if (m.clubManager == "是" || m.clubManager == "1") {
                                         Spacer(Modifier.width(6.dp))
                                         Surface(shape = RoundedCornerShape(4.dp), color = Color(0xFFF59E0B).copy(alpha = 0.15f)) {
@@ -367,6 +368,7 @@ private fun ActivitiesTab(
 
 // ======================== Tab 2: 报名 ========================
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun RegistrationsTab(
     pendingRegs: List<RegistrationAuditData>,

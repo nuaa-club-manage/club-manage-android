@@ -296,7 +296,8 @@ data class UserRegistrationData(
     @SerializedName("content") val content: String? = null,
     @SerializedName("reviewState") val reviewState: String? = null,
     @SerializedName("publishTime") val publishTime: String? = null,
-    @SerializedName("clubId") val clubId: String? = null
+    @SerializedName("clubId") val clubId: String? = null,
+    @SerializedName("clubName") val clubName: String? = null
 )
 
 class UserRegistrationListResponse : ApiResult() {
