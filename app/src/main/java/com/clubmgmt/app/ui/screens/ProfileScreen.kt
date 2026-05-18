@@ -390,25 +390,26 @@ fun ProfileScreen(
                                     shape = RoundedCornerShape(12.dp),
                                     elevation = CardDefaults.cardElevation(1.dp)
                                 ) {
-                                    Column(Modifier.padding(16.dp)) {
-                                        Text(
-                                            reg.title,
-                                            style = MaterialTheme.typography.titleMedium,
-                                            fontWeight = FontWeight.Bold
-                                        )
-                                        if (reg.clubName != null) {
-                                            Spacer(Modifier.height(2.dp))
+                                    Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                                        Column(Modifier.weight(1f)) {
                                             Text(
-                                                "社团: ${reg.clubName}",
-                                                style = MaterialTheme.typography.bodySmall,
-                                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                                                reg.title,
+                                                style = MaterialTheme.typography.titleMedium,
+                                                fontWeight = FontWeight.Bold
                                             )
+                                            if (reg.clubName != null) {
+                                                Spacer(Modifier.height(2.dp))
+                                                Text(
+                                                    "社团: ${reg.clubName}",
+                                                    style = MaterialTheme.typography.bodySmall,
+                                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                                                )
+                                            }
+                                            Spacer(Modifier.height(4.dp))
+                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                StatusBadge(reg.reviewState.orEmpty())
+                                            }
                                         }
-                                        Spacer(Modifier.height(4.dp))
-                                        Row(verticalAlignment = Alignment.CenterVertically) {
-                                            StatusBadge(reg.reviewState.orEmpty())
-                                        }
-                                        Spacer(Modifier.height(8.dp))
                                         OutlinedButton(
                                                 onClick = {
                                                     scope.launch {
@@ -432,10 +433,10 @@ fun ProfileScreen(
                                             ) {
                                                 Text("取消报名")
                                             }
-                                        }
                                     }
                                 }
                             }
+                        }
                     }
 
                     3 -> { // 我发布的活动
