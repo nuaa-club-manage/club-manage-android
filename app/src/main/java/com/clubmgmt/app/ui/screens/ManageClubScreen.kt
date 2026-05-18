@@ -540,6 +540,19 @@ private fun RegistrationsTab(
                                 Button(onClick = {
                                     scope.launch {
                                         try {
+                                            // 检查活动人数限制
+                                            val act = activities.find { it.activityId == reg.activityId }
+                                            val limit = act?.capacityLimit ?: 0
+                                            if (limit > 0) {
+                                                val countResp = RetrofitClient.instance.getApprovedParticipants(reg.activityId)
+                                                if (countResp.isSuccessful) {
+                                                    val count = countResp.body()?.data?.size ?: 0
+                                                    if (count >= limit) {
+                                                        snackbarHostState.showSnackbar("该活动名额已满，无法批准更多报名")
+                                                        return@launch
+                                                    }
+                                                }
+                                            }
                                             RetrofitClient.instance.auditRegistration(AuditRegistrationRequest(reg.registrationId, true))
                                             reload()
                                         } catch (_: Exception) { }
