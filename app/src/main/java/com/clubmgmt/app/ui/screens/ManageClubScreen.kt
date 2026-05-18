@@ -1,5 +1,6 @@
 package com.clubmgmt.app.ui.screens
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -25,8 +26,9 @@ import com.clubmgmt.app.data.api.ClubMemberListData
 import com.clubmgmt.app.data.api.DissolveClubRequest
 import com.clubmgmt.app.data.api.RegistrationAuditData
 import com.clubmgmt.app.data.api.RetrofitClient
-import com.clubmgmt.app.data.api.SetClubManagerRequest
 import com.clubmgmt.app.data.api.UpdateActivityRequest
+import com.clubmgmt.app.data.api.AdminUserSearchRequest
+import com.clubmgmt.app.data.api.UserInfoData
 import com.clubmgmt.app.data.api.UpdateClubRequest
 import com.clubmgmt.app.data.toClub
 import com.clubmgmt.app.ui.theme.Indigo600
@@ -144,6 +146,7 @@ private fun MembersTab(
     reload: () -> Unit
 ) {
     val scope = rememberCoroutineScope()
+    var viewUserId by remember { mutableStateOf<String?>(null) }
 
     LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 12.dp)) {
         // 待审核入社申请
@@ -153,7 +156,10 @@ private fun MembersTab(
             }
             pendingMembers.forEach { request ->
                 item {
-                    Card(shape = RoundedCornerShape(12.dp)) {
+                    Card(
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.clickable { viewUserId = request.userId }
+                    ) {
                         Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
                             Column(Modifier.weight(1f)) {
                                 Text(request.realName.orEmpty().ifBlank { request.userName }, style = MaterialTheme.typography.titleMedium)
@@ -193,7 +199,10 @@ private fun MembersTab(
         } else {
             members.forEach { m ->
                 item {
-                    Card(shape = RoundedCornerShape(12.dp)) {
+                    Card(
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.clickable { viewUserId = m.userId }
+                    ) {
                         Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
                             Column(Modifier.weight(1f)) {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -207,30 +216,15 @@ private fun MembersTab(
                                 }
                                 Text("学号: ${m.userId}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
                             }
-                            if (m.clubManager == "是" || m.clubManager == "1") {
-                                OutlinedButton(onClick = {
-                                    scope.launch {
-                                        try {
-                                            RetrofitClient.instance.setClubManager(SetClubManagerRequest(clubId, m.userId, false))
-                                            reload()
-                                        } catch (_: Exception) { }
-                                    }
-                                }, shape = RoundedCornerShape(8.dp)) { Text("取消管理员") }
-                            } else {
-                                Button(onClick = {
-                                    scope.launch {
-                                        try {
-                                            RetrofitClient.instance.setClubManager(SetClubManagerRequest(clubId, m.userId, true))
-                                            reload()
-                                        } catch (_: Exception) { }
-                                    }
-                                }, shape = RoundedCornerShape(8.dp)) { Text("设为管理员") }
-                            }
                         }
                     }
                 }
             }
         }
+    }
+
+    if (viewUserId != null) {
+        UserInfoDialog(userId = viewUserId!!, onDismiss = { viewUserId = null })
     }
 }
 
@@ -490,6 +484,7 @@ private fun RegistrationsTab(
     val scope = rememberCoroutineScope()
     var isLoadingParticipants by remember { mutableStateOf(false) }
     var localParticipants by remember { mutableStateOf<List<ApprovedParticipantData>>(emptyList()) }
+    var viewUserId by remember { mutableStateOf<String?>(null) }
 
     // 当选择的活动变化时加载参与者
     LaunchedEffect(selectedActId) {
@@ -520,7 +515,10 @@ private fun RegistrationsTab(
         } else {
             pendingRegs.forEach { reg ->
                 item {
-                    Card(shape = RoundedCornerShape(12.dp)) {
+                    Card(
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.clickable { viewUserId = reg.userId }
+                    ) {
                         Column(Modifier.padding(12.dp)) {
                             Text(reg.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                             Text("${reg.realName} | ${reg.phoneNumber}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
@@ -606,7 +604,10 @@ private fun RegistrationsTab(
             }
             localParticipants.forEach { p ->
                 item {
-                    Card(shape = RoundedCornerShape(12.dp)) {
+                    Card(
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.clickable { viewUserId = p.userId }
+                    ) {
                         Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
                             Icon(Icons.Filled.Person, null, Modifier.size(20.dp), tint = Indigo600)
                             Spacer(Modifier.width(8.dp))
@@ -622,9 +623,11 @@ private fun RegistrationsTab(
             }
         }
     }
-}
 
-// ======================== Tab 3: 设置 ========================
+    if (viewUserId != null) {
+        UserInfoDialog(userId = viewUserId!!, onDismiss = { viewUserId = null })
+    }
+}
 
 @Composable
 private fun SettingsTab(
@@ -694,5 +697,67 @@ private fun SettingsTab(
                 dismissButton = { TextButton(onClick = { showDisbandDialog = false }) { Text("取消") } }
             )
         }
+    }
+}
+
+// ======================== 用户信息弹窗 ========================
+
+@Composable
+private fun UserInfoDialog(
+    userId: String,
+    onDismiss: () -> Unit
+) {
+    var userInfo by remember { mutableStateOf<com.clubmgmt.app.data.api.UserInfoData?>(null) }
+    var isLoading by remember { mutableStateOf(true) }
+
+    LaunchedEffect(userId) {
+        try {
+            val resp = RetrofitClient.instance.adminSearchUsers(
+                AdminUserSearchRequest(pageNo = 1, pageSize = 10, search = userId)
+            )
+            if (resp.isSuccessful) {
+                userInfo = resp.body()?.data?.records?.firstOrNull()
+            }
+        } catch (_: Exception) { }
+        isLoading = false
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("用户信息", fontWeight = FontWeight.Bold) },
+        text = {
+            if (isLoading) {
+                Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator(Modifier.size(24.dp))
+                }
+            } else {
+                val u = userInfo
+                if (u != null) {
+                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        InfoRow("学号", u.userId)
+                        InfoRow("用户名", u.userName)
+                        if (!u.realName.isNullOrBlank()) InfoRow("真实姓名", u.realName!!)
+                        if (!u.gender.isNullOrBlank()) InfoRow("性别", u.gender!!)
+                        if (!u.school.isNullOrBlank()) InfoRow("学校", u.school!!)
+                        if (!u.degree.isNullOrBlank()) InfoRow("学历", u.degree!!)
+                        if (!u.phoneNumber.isNullOrBlank()) InfoRow("手机号", u.phoneNumber!!)
+                        if (!u.userMailbox.isNullOrBlank()) InfoRow("邮箱", u.userMailbox!!)
+                    }
+                } else {
+                    Text("未找到该用户信息")
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) { Text("关闭") }
+        }
+    )
+}
+
+@Composable
+private fun InfoRow(label: String, value: String) {
+    Row {
+        Text("$label: ", fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyMedium)
+        Text(value, style = MaterialTheme.typography.bodyMedium)
     }
 }
