@@ -403,6 +403,24 @@ fun AdminScreenWrapper(
                         modifier = Modifier.padding(horizontal = 12.dp)
                     )
                 }
+
+                Spacer(Modifier.weight(1f))
+                HorizontalDivider(modifier = Modifier.padding(horizontal = 12.dp))
+                Spacer(Modifier.height(4.dp))
+                NavigationDrawerItem(
+                    icon = { Icon(Icons.Filled.ExitToApp, null, modifier = Modifier.size(22.dp)) },
+                    label = { Text("退出登录", color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Medium) },
+                    selected = false,
+                    onClick = {
+                        scope.launch { drawerState.close() }
+                        com.clubmgmt.app.data.SessionManager.logout()
+                        navController.navigate(Screen.Login.route) {
+                            popUpTo(0) { inclusive = true }
+                        }
+                    },
+                    modifier = Modifier.padding(horizontal = 12.dp)
+                )
+                Spacer(Modifier.height(8.dp))
             }
         }
     ) {
