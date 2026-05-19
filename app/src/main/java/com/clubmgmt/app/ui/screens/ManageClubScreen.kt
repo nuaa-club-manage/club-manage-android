@@ -27,7 +27,6 @@ import com.clubmgmt.app.data.api.DissolveClubRequest
 import com.clubmgmt.app.data.api.RegistrationAuditData
 import com.clubmgmt.app.data.api.RetrofitClient
 import com.clubmgmt.app.data.api.UpdateActivityRequest
-import com.clubmgmt.app.data.api.AdminUserSearchRequest
 import com.clubmgmt.app.data.api.UserInfoData
 import com.clubmgmt.app.data.api.UpdateClubRequest
 import com.clubmgmt.app.data.toClub
@@ -725,16 +724,14 @@ private fun UserInfoDialog(
     userId: String,
     onDismiss: () -> Unit
 ) {
-    var userInfo by remember { mutableStateOf<com.clubmgmt.app.data.api.UserInfoData?>(null) }
+    var userInfo by remember { mutableStateOf<UserInfoData?>(null) }
     var isLoading by remember { mutableStateOf(true) }
 
     LaunchedEffect(userId) {
         try {
-            val resp = RetrofitClient.instance.adminSearchUsers(
-                AdminUserSearchRequest(pageNo = 1, pageSize = 10, search = userId)
-            )
+            val resp = RetrofitClient.instance.getUserInfoById(userId)
             if (resp.isSuccessful) {
-                userInfo = resp.body()?.data?.records?.firstOrNull()
+                userInfo = resp.body()?.data
             }
         } catch (_: Exception) { }
         isLoading = false

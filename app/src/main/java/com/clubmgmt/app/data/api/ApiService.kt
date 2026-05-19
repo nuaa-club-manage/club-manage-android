@@ -4,8 +4,10 @@ import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
+import retrofit2.http.HTTP
 import retrofit2.http.POST
 import retrofit2.http.PUT
+import retrofit2.http.Path
 import retrofit2.http.Query
 
 interface ApiService {
@@ -41,6 +43,10 @@ interface ApiService {
     /** 获取当前登录用户信息 */
     @GET("api/user/info")
     suspend fun getUserInfo(): Response<UserInfoResponse>
+
+    /** 根据 userId 查询指定用户信息（登录用户可调用） */
+    @GET("api/user/info/{targetUserId}")
+    suspend fun getUserInfoById(@Path("targetUserId") targetUserId: String): Response<UserInfoResponse>
 
     /** 修改个人基本信息 */
     @PUT("api/user/info")
@@ -95,7 +101,7 @@ interface ApiService {
     suspend fun auditMember(@Body request: AuditMemberRequest): Response<ApiStringResponse>
 
     /** 退出社团 */
-    @DELETE("api/member/leave")
+    @HTTP(method = "DELETE", path = "api/member/leave", hasBody = true)
     suspend fun leaveClub(@Body request: LeaveClubRequest): Response<ApiStringResponse>
 
     /** 社团管理员查看成员名单（支持按姓名/学号模糊搜索） */

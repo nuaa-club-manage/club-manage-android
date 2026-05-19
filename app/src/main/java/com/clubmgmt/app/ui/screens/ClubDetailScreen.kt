@@ -308,10 +308,15 @@ fun ClubDetailScreen(
                             try {
                                 val resp = RetrofitClient.instance.leaveClub(LeaveClubRequest(clubId = clubId))
                                 if (resp.isSuccessful) {
-                                    isMember = false
-                                    snackbarHostState.showSnackbar("已退出社团")
+                                    val body = resp.body()
+                                    if (body != null && body.code == 200) {
+                                        isMember = false
+                                        snackbarHostState.showSnackbar("已退出社团")
+                                    } else {
+                                        snackbarHostState.showSnackbar(body?.message ?: "退出失败")
+                                    }
                                 } else {
-                                    snackbarHostState.showSnackbar("退出失败")
+                                    snackbarHostState.showSnackbar("退出失败 (${resp.code()})")
                                 }
                             } catch (_: Exception) {
                                 snackbarHostState.showSnackbar("网络错误")
