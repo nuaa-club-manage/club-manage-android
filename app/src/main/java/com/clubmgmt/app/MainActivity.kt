@@ -334,7 +334,10 @@ fun MainApp() {
                     ) {
                         AdminClubDetailScreen(
                             clubId = clubId,
-                            onBack = { navController.popBackStack() }
+                            onBack = { navController.popBackStack() },
+                            onMemberClick = { userId ->
+                                navController.navigate(Screen.AdminUserDetail.createRoute(userId))
+                            }
                         )
                     }
                 }
@@ -344,7 +347,9 @@ fun MainApp() {
                         currentRoute = Screen.AdminActivityApproval.route
                     ) {
                         AdminActivityApprovalScreen(
-                            onActivityClick = { actId -> navController.navigate(Screen.ActivityDetail.createRoute(actId)) }
+                            onActivityClick = { actId ->
+                                navController.navigate(Screen.ActivityDetail.createRoute(actId))
+                            }
                         )
                     }
                 }

@@ -284,6 +284,14 @@ fun EditProfileScreen(
                             visualTransformation = if (pwdVisible) VisualTransformation.None else PasswordVisualTransformation(),
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Next)
                         )
+                        Text(
+                            "密码为6~20位，必须包含数字和字母",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(start = 4.dp, top = 4.dp)
+                        )
                         OutlinedTextField(
                             value = confirmNewPassword, onValueChange = { confirmNewPassword = it },
                             label = { Text("确认新密码") },
@@ -297,12 +305,17 @@ fun EditProfileScreen(
                         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
                             Button(
                                 onClick = {
-                                    if (newPassword != confirmNewPassword) {
-                                        scope.launch { snackbarHostState.showSnackbar("两次输入的新密码不一致") }
-                                        return@Button
-                                    }
                                     if (oldPassword.isBlank() || newPassword.isBlank()) {
                                         scope.launch { snackbarHostState.showSnackbar("请填写完整的密码信息") }
+                                        return@Button
+                                    }
+                                    val passwordRegex = Regex("^(?=.*[a-zA-Z])(?=.*\\d).{6,20}$")
+                                    if (!passwordRegex.matches(newPassword)) {
+                                        scope.launch { snackbarHostState.showSnackbar("密码格式为6~20位，必须包含数字和字母") }
+                                        return@Button
+                                    }
+                                    if (newPassword != confirmNewPassword) {
+                                        scope.launch { snackbarHostState.showSnackbar("两次输入的新密码不一致") }
                                         return@Button
                                     }
                                     scope.launch {

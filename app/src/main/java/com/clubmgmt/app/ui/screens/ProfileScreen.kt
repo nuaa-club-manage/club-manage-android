@@ -21,14 +21,15 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.clubmgmt.app.data.SessionManager
+import com.clubmgmt.app.data.api.ActivityData
 import com.clubmgmt.app.data.api.ClubData
 import com.clubmgmt.app.data.api.ClubMemberApplyData
-import com.clubmgmt.app.data.api.ActivityData
 import com.clubmgmt.app.data.api.RetrofitClient
 import com.clubmgmt.app.data.api.UserInfoData
+import com.clubmgmt.app.data.api.UserRatingData
+import com.clubmgmt.app.data.api.CancelRegistrationRequest
 import com.clubmgmt.app.data.api.UserRegistrationData
-import com.clubmgmt.app.data.toActivity
-import com.clubmgmt.app.data.toClub
+import com.clubmgmt.app.ui.theme.Indigo600
 import kotlinx.coroutines.launch
 
 @Composable
@@ -43,7 +44,7 @@ fun ProfileScreen(
     onLogout: () -> Unit = {}
 ) {
     var activeTab by remember { mutableIntStateOf(0) }
-    val tabs = listOf("我加入的社团", "我管理的社团", "我报名的活动", "我发布的活动")
+    val tabs = listOf("我加入的社团", "我管理的社团", "我报名的活动", "我发布的活动", "我的评分", "我的申请")
     var userInfo by remember { mutableStateOf<UserInfoData?>(null) }
     var isLoading by remember { mutableStateOf(true) }
     var isAdmin by remember { mutableStateOf(false) }
@@ -59,6 +60,18 @@ fun ProfileScreen(
     var isLoadingRegs by remember { mutableStateOf(false) }
     var myActivities by remember { mutableStateOf<List<ActivityData>?>(null) }
     var isLoadingMyActs by remember { mutableStateOf(false) }
+
+    // 我的社团创建申请
+    var myClubCreations by remember { mutableStateOf<List<ClubData>?>(null) }
+    var isLoadingClubCreations by remember { mutableStateOf(false) }
+
+    // New: 我的评分
+    var myRatings by remember { mutableStateOf<List<UserRatingData>?>(null) }
+    var isLoadingRatings by remember { mutableStateOf(false) }
+
+    // New: 我的申请 子Tab
+    val appSubTabs = listOf("成立社团申请", "发布活动申请", "加入社团申请", "报名活动申请")
+    var appSubTab by remember { mutableIntStateOf(0) }
 
     fun loadUserInfo() {
         scope.launch {
@@ -157,6 +170,83 @@ fun ProfileScreen(
                     } catch (_: Exception) {
                         snackbarHostState.showSnackbar("网络错误")
                     } finally {
+                        isLoadingMyActs = false
+                    }
+                }
+            }
+            4 -> {
+                if (myRatings == null) {
+                    isLoadingRatings = true
+                    try {
+                        val resp = RetrofitClient.instance.getMyRatings()
+                        if (resp.isSuccessful) {
+                            val body = resp.body()
+                            if (body != null && body.code == 200) {
+                                myRatings = body.data ?: emptyList()
+                            }
+                        }
+                    } catch (_: Exception) {
+                        snackbarHostState.showSnackbar("网络错误")
+                    } finally {
+                        isLoadingRatings = false
+                    }
+                }
+            }
+            5 -> {
+                // 我的申请：确保依赖的数据已加载
+                if (myClubCreations == null) {
+                    isLoadingClubCreations = true
+                    try {
+                        val resp = RetrofitClient.instance.getMyClubCreations()
+                        if (resp.isSuccessful) {
+                            val body = resp.body()
+                            if (body != null && body.code == 200) {
+                                myClubCreations = body.data ?: emptyList()
+                            }
+                        }
+                    } catch (_: Exception) { } finally {
+                        isLoadingClubCreations = false
+                    }
+                }
+                if (myApplications == null) {
+                    isLoadingApps = true
+                    try {
+                        val resp = RetrofitClient.instance.getMyApplications()
+                        if (resp.isSuccessful) {
+                            val body = resp.body()
+                            if (body != null && body.code == 200) {
+                                myApplications = body.data ?: emptyList()
+                            }
+                        }
+                    } catch (_: Exception) { } finally {
+                        isLoadingApps = false
+                    }
+                }
+                if (myRegistrations == null) {
+                    isLoadingRegs = true
+                    try {
+                        val resp = RetrofitClient.instance.getMyRegistrations()
+                        if (resp.isSuccessful) {
+                            val body = resp.body()
+                            if (body != null && body.code == 200) {
+                                myRegistrations = body.data ?: emptyList()
+                            }
+                        }
+                    } catch (_: Exception) { } finally {
+                        isLoadingRegs = false
+                    }
+                }
+                if (myActivities == null) {
+                    isLoadingMyActs = true
+                    try {
+                        val resp = RetrofitClient.instance.getMyActivities()
+                        if (resp.isSuccessful) {
+                            val body = resp.body()
+                            if (body != null && body.code == 200) {
+                                myActivities = body.data ?: emptyList()
+                            }
+                        }
+                    } catch (_: Exception) { } finally {
                         isLoadingMyActs = false
                     }
                 }
@@ -275,17 +365,20 @@ fun ProfileScreen(
                 }
 
                 when (activeTab) {
-                    0 -> { // 我加入的社团
+                    0 -> { // 我加入的社团（已通过）
+                        val approvedApps = myApplications?.filter {
+                            it.reviewState == "approved" || it.reviewState == "已通过"
+                        }
                         if (isLoadingApps) {
                             item {
                                 Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                                     CircularProgressIndicator(Modifier.size(32.dp))
                                 }
                             }
-                        } else if (myApplications.isNullOrEmpty()) {
+                        } else if (approvedApps.isNullOrEmpty()) {
                             item {
                                 Text(
-                                    "暂无入社申请记录",
+                                    "暂无已加入的社团",
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
                                     modifier = Modifier.fillMaxWidth(),
@@ -293,7 +386,7 @@ fun ProfileScreen(
                                 )
                             }
                         } else {
-                            items(myApplications!!) { app ->
+                            items(approvedApps) { app ->
                                 Card(
                                     modifier = Modifier
                                         .fillMaxWidth()
@@ -324,7 +417,7 @@ fun ProfileScreen(
                         }
                     }
 
-                    1 -> { // 我管理的社团
+                    1 -> { // 我管理的社团（不变）
                         if (isLoadingManaged) {
                             item {
                                 Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
@@ -356,6 +449,8 @@ fun ProfileScreen(
                                     ) {
                                         Column(Modifier.weight(1f)) {
                                             Text(club.clubName, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                                            Spacer(Modifier.height(4.dp))
+                                            StatusBadge(club.clubState.orEmpty())
                                         }
                                         Icon(Icons.Filled.ChevronRight, null, tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f))
                                     }
@@ -364,17 +459,20 @@ fun ProfileScreen(
                         }
                     }
 
-                    2 -> { // 我报名的活动
+                    2 -> { // 我报名的活动（已通过）
+                        val approvedRegs = myRegistrations?.filter {
+                            it.reviewState == "approved" || it.reviewState == "已通过"
+                        }
                         if (isLoadingRegs) {
                             item {
                                 Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                                     CircularProgressIndicator(Modifier.size(32.dp))
                                 }
                             }
-                        } else if (myRegistrations.isNullOrEmpty()) {
+                        } else if (approvedRegs.isNullOrEmpty()) {
                             item {
                                 Text(
-                                    "暂无报名记录",
+                                    "暂无已报名的活动",
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
                                     modifier = Modifier.fillMaxWidth(),
@@ -382,7 +480,7 @@ fun ProfileScreen(
                                 )
                             }
                         } else {
-                            items(myRegistrations!!) { reg ->
+                            items(approvedRegs) { reg ->
                                 Card(
                                     modifier = Modifier
                                         .fillMaxWidth()
@@ -397,6 +495,8 @@ fun ProfileScreen(
                                                 style = MaterialTheme.typography.titleMedium,
                                                 fontWeight = FontWeight.Bold
                                             )
+                                            Spacer(Modifier.height(4.dp))
+                                            StatusBadge(reg.reviewState.orEmpty())
                                             if (reg.clubName != null) {
                                                 Spacer(Modifier.height(2.dp))
                                                 Text(
@@ -405,17 +505,14 @@ fun ProfileScreen(
                                                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
                                                 )
                                             }
-                                            Spacer(Modifier.height(4.dp))
-                                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                                StatusBadge(reg.reviewState.orEmpty())
-                                            }
                                         }
-                                        OutlinedButton(
+                                        if (reg.activityState != "已结束") {
+                                            OutlinedButton(
                                                 onClick = {
                                                     scope.launch {
                                                         try {
                                                             val resp = RetrofitClient.instance.cancelRegistration(
-                                                                com.clubmgmt.app.data.api.CancelRegistrationRequest(registrationID = reg.registrationId ?: "")
+                                                                CancelRegistrationRequest(registrationID = reg.registrationId ?: "")
                                                             )
                                                             if (resp.isSuccessful) {
                                                                 myRegistrations = myRegistrations?.filter { it.registrationId != reg.registrationId }
@@ -433,20 +530,25 @@ fun ProfileScreen(
                                             ) {
                                                 Text("取消报名")
                                             }
+                                        }
                                     }
                                 }
                             }
                         }
                     }
 
-                    3 -> { // 我发布的活动
+                    3 -> { // 我发布的活动（已发布/已结束）
+                        val publishedActs = myActivities?.filter {
+                            it.activityState == "已发布" || it.activityState == "已结束"
+                                    || it.activityState == "approved" || it.activityState == "ended"
+                        }
                         if (isLoadingMyActs) {
                             item {
                                 Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                                     CircularProgressIndicator(Modifier.size(32.dp))
                                 }
                             }
-                        } else if (myActivities.isNullOrEmpty()) {
+                        } else if (publishedActs.isNullOrEmpty()) {
                             item {
                                 Text(
                                     "暂未发布任何活动",
@@ -457,7 +559,7 @@ fun ProfileScreen(
                                 )
                             }
                         } else {
-                            items(myActivities!!, key = { it.activityId }) { act ->
+                            items(publishedActs, key = { it.activityId }) { act ->
                                 Card(
                                     modifier = Modifier
                                         .fillMaxWidth()
@@ -469,6 +571,270 @@ fun ProfileScreen(
                                         Text(act.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                                         Spacer(Modifier.height(4.dp))
                                         StatusBadge(act.activityState.orEmpty())
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    4 -> { // 我的评分
+                        if (isLoadingRatings) {
+                            item {
+                                Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                                    CircularProgressIndicator(Modifier.size(32.dp))
+                                }
+                            }
+                        } else if (myRatings.isNullOrEmpty()) {
+                            item {
+                                Text(
+                                    "暂未对任何社团进行评分",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                                    modifier = Modifier.fillMaxWidth(),
+                                    textAlign = TextAlign.Center
+                                )
+                            }
+                        } else {
+                            items(myRatings!!, key = { it.ratingId }) { rating ->
+                                Card(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable { onClubClick(rating.clubId) },
+                                    shape = RoundedCornerShape(12.dp),
+                                    elevation = CardDefaults.cardElevation(1.dp)
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(16.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Column(Modifier.weight(1f)) {
+                                            Text(
+                                                rating.clubName,
+                                                style = MaterialTheme.typography.titleMedium,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                            if (rating.ratingTime != null) {
+                                                Spacer(Modifier.height(2.dp))
+                                                Text(
+                                                    "评分时间: ${rating.ratingTime}",
+                                                    style = MaterialTheme.typography.bodySmall,
+                                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                                                )
+                                            }
+                                        }
+                                        Surface(
+                                            shape = RoundedCornerShape(8.dp),
+                                            color = Indigo600.copy(alpha = 0.15f)
+                                        ) {
+                                            Text(
+                                                "评分: ${rating.rating ?: "0"}",
+                                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                                                color = Indigo600,
+                                                style = MaterialTheme.typography.titleMedium,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                        }
+                                        Spacer(Modifier.width(4.dp))
+                                        Icon(
+                                            Icons.Filled.ChevronRight, null,
+                                            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    5 -> { // 我的申请（待审核/已拒绝）
+                        // 子Tab选择器
+                        item {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                appSubTabs.forEachIndexed { index, title ->
+                                    FilterChip(
+                                        selected = appSubTab == index,
+                                        onClick = { appSubTab = index },
+                                        label = { Text(title, maxLines = 1) },
+                                        shape = RoundedCornerShape(8.dp)
+                                    )
+                                }
+                            }
+                        }
+
+                        when (appSubTab) {
+                            0 -> { // 成立社团申请
+                                val pendingCreations = myClubCreations?.filter {
+                                    it.clubState == "pending" || it.clubState == "待审核"
+                                            || it.clubState == "rejected" || it.clubState == "未通过"
+                                }
+                                if (pendingCreations.isNullOrEmpty()) {
+                                    item {
+                                        Text(
+                                            "暂无成立社团的申请记录",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                                            modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
+                                            textAlign = TextAlign.Center
+                                        )
+                                    }
+                                } else {
+                                    items(pendingCreations, key = { it.clubId }) { club ->
+                                        Card(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .clickable { onClubClick(club.clubId) },
+                                            shape = RoundedCornerShape(12.dp),
+                                            elevation = CardDefaults.cardElevation(1.dp)
+                                        ) {
+                                            Row(
+                                                modifier = Modifier.padding(16.dp),
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Column(Modifier.weight(1f)) {
+                                                    Text(
+                                                        club.clubName,
+                                                        style = MaterialTheme.typography.titleMedium,
+                                                        fontWeight = FontWeight.Bold
+                                                    )
+                                                    Spacer(Modifier.height(4.dp))
+                                                    StatusBadge(club.clubState.orEmpty())
+                                                }
+                                                Icon(
+                                                    Icons.Filled.ChevronRight, null,
+                                                    tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            1 -> { // 发布活动申请
+                                val pendingActs = myActivities?.filter {
+                                    it.activityState == "pending" || it.activityState == "待审核"
+                                            || it.activityState == "rejected" || it.activityState == "未通过"
+                                }
+                                if (pendingActs.isNullOrEmpty()) {
+                                    item {
+                                        Text(
+                                            "暂无发布活动的申请记录",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                                            modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
+                                            textAlign = TextAlign.Center
+                                        )
+                                    }
+                                } else {
+                                    items(pendingActs, key = { it.activityId }) { act ->
+                                        Card(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .clickable { onActivityClick(act.activityId) },
+                                            shape = RoundedCornerShape(12.dp),
+                                            elevation = CardDefaults.cardElevation(1.dp)
+                                        ) {
+                                            Column(Modifier.padding(16.dp)) {
+                                                Text(act.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                                                Spacer(Modifier.height(4.dp))
+                                                StatusBadge(act.activityState.orEmpty())
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            2 -> { // 加入社团申请
+                                val pendingApps = myApplications?.filter {
+                                    it.reviewState == "pending" || it.reviewState == "待审核"
+                                            || it.reviewState == "rejected" || it.reviewState == "未通过"
+                                }
+                                if (pendingApps.isNullOrEmpty()) {
+                                    item {
+                                        Text(
+                                            "暂无入社申请记录",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                                            modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
+                                            textAlign = TextAlign.Center
+                                        )
+                                    }
+                                } else {
+                                    items(pendingApps) { app ->
+                                        Card(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .clickable { onClubClick(app.clubId) },
+                                            shape = RoundedCornerShape(12.dp),
+                                            elevation = CardDefaults.cardElevation(1.dp)
+                                        ) {
+                                            Row(
+                                                modifier = Modifier.padding(16.dp),
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Column(Modifier.weight(1f)) {
+                                                    Text(
+                                                        app.clubName,
+                                                        style = MaterialTheme.typography.titleMedium,
+                                                        fontWeight = FontWeight.Bold
+                                                    )
+                                                    Spacer(Modifier.height(4.dp))
+                                                    StatusBadge(app.reviewState.orEmpty())
+                                                }
+                                                Icon(
+                                                    Icons.Filled.ChevronRight, null,
+                                                    tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            3 -> { // 报名活动申请
+                                val pendingRegs = myRegistrations?.filter {
+                                    it.reviewState == "pending" || it.reviewState == "待审核"
+                                            || it.reviewState == "rejected" || it.reviewState == "未通过"
+                                }
+                                if (pendingRegs.isNullOrEmpty()) {
+                                    item {
+                                        Text(
+                                            "暂无报名活动的申请记录",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                                            modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
+                                            textAlign = TextAlign.Center
+                                        )
+                                    }
+                                } else {
+                                    items(pendingRegs) { reg ->
+                                        Card(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .clickable { onActivityClick(reg.activityId) },
+                                            shape = RoundedCornerShape(12.dp),
+                                            elevation = CardDefaults.cardElevation(1.dp)
+                                        ) {
+                                            Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                                                Column(Modifier.weight(1f)) {
+                                                    Text(
+                                                        reg.title,
+                                                        style = MaterialTheme.typography.titleMedium,
+                                                        fontWeight = FontWeight.Bold
+                                                    )
+                                                    if (reg.clubName != null) {
+                                                        Spacer(Modifier.height(2.dp))
+                                                        Text(
+                                                            "社团: ${reg.clubName}",
+                                                            style = MaterialTheme.typography.bodySmall,
+                                                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                                                        )
+                                                    }
+                                                    Spacer(Modifier.height(4.dp))
+                                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                                        StatusBadge(reg.reviewState.orEmpty())
+                                                    }
+                                                }
+                                            }
+                                        }
                                     }
                                 }
                             }

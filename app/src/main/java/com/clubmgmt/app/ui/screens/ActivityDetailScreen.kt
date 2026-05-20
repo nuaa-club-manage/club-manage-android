@@ -26,7 +26,8 @@ import kotlinx.coroutines.launch
 fun ActivityDetailScreen(
     activityId: String,
     onBack: () -> Unit,
-    onClubClick: (String) -> Unit
+    onClubClick: (String) -> Unit,
+    showRegistration: Boolean = true
 ) {
     var activity by remember { mutableStateOf<com.clubmgmt.app.data.Activity?>(null) }
     var isLoading by remember { mutableStateOf(true) }
@@ -167,7 +168,8 @@ fun ActivityDetailScreen(
             // 若是自己发布的活动则不显示报名/取消按钮
             val isMyActivity = safeActivity.userId == com.clubmgmt.app.data.SessionManager.userId
 
-            if (!isMyActivity) {
+            val isAdmin = com.clubmgmt.app.data.SessionManager.userRole == "ADMIN"
+            if (showRegistration && !isMyActivity && !isAdmin) {
             // 报名/取消报名按钮
             if (registeredId != null) {
                 // 已报名 → 显示取消报名

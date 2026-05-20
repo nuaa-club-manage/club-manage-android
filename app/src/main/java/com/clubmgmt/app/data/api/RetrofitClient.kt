@@ -10,7 +10,7 @@ import java.util.concurrent.TimeUnit
 object RetrofitClient {
 
     // Spring Boot 后端地址（Android 模拟器用 10.0.2.2 访问宿主机 localhost）
-    private const val BASE_URL = "http://10.100.235.176:8080/"
+    private const val BASE_URL = "http://10.43.16.234:8080/"
 
     private val okHttpClient: OkHttpClient by lazy {
         val logging = HttpLoggingInterceptor().apply {

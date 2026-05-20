@@ -170,6 +170,13 @@ fun LoginScreen(
             scope.launch { snackbarHostState.showSnackbar("请输入账号和密码") }
             return
         }
+        if (isPasswordLogin && !isAdminLogin) {
+            val passwordRegex = Regex("^(?=.*[a-zA-Z])(?=.*\\d).{6,20}$")
+            if (!passwordRegex.matches(userPassword)) {
+                scope.launch { snackbarHostState.showSnackbar("密码格式为6~20位，必须包含数字和字母") }
+                return
+            }
+        }
         if (!isPasswordLogin && contact.isBlank()) {
             scope.launch { snackbarHostState.showSnackbar("请输入手机号/邮箱") }
             return
@@ -308,6 +315,14 @@ fun LoginScreen(
                         keyboardType = KeyboardType.Password,
                         imeAction = ImeAction.Done
                     )
+                )
+                Text(
+                    "密码为6~20位，必须包含数字和字母",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 4.dp, top = 4.dp)
                 )
             }
 

@@ -1,5 +1,6 @@
 package com.clubmgmt.app.ui.screens
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -26,7 +27,8 @@ import kotlinx.coroutines.launch
 @Composable
 fun AdminClubDetailScreen(
     clubId: String,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onMemberClick: (String) -> Unit = {}
 ) {
     var club by remember { mutableStateOf<com.clubmgmt.app.data.Club?>(null) }
     var members by remember { mutableStateOf<List<ClubMemberListData>>(emptyList()) }
@@ -122,7 +124,9 @@ fun AdminClubDetailScreen(
                 item { Text("暂无成员", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)) }
             } else {
                 items(members, key = { it.userId }) { m ->
-                    Card(shape = RoundedCornerShape(12.dp)) {
+                    Card(shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.clickable { onMemberClick(m.userId) }
+                    ) {
                         Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
                             Icon(Icons.Filled.Person, null, Modifier.size(20.dp), tint = Indigo600)
                             Spacer(Modifier.width(8.dp))
@@ -146,9 +150,19 @@ fun AdminClubDetailScreen(
                                     onClick = {
                                         scope.launch {
                                             try {
-                                                RetrofitClient.instance.setClubManager(SetClubManagerRequest(clubId, m.userId, false))
-                                                loadData()
-                                            } catch (_: Exception) { }
+                                                val resp = RetrofitClient.instance.setClubManager(SetClubManagerRequest(clubId, m.userId, false))
+                                                if (resp.isSuccessful) {
+                                                    loadData()
+                                                } else {
+                                                    val msg = try {
+                                                        val json = org.json.JSONObject(resp.errorBody()?.string() ?: "")
+                                                        json.optString("message", "操作失败")
+                                                    } catch (_: Exception) { "操作失败" }
+                                                    snackbarHostState.showSnackbar(msg)
+                                                }
+                                            } catch (_: Exception) {
+                                                snackbarHostState.showSnackbar("网络错误")
+                                            }
                                         }
                                     },
                                     shape = RoundedCornerShape(8.dp)

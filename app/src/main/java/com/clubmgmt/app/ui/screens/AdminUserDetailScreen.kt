@@ -214,6 +214,14 @@ fun AdminUserDetailScreen(
                             modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(8.dp),
                             singleLine = true, keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done)
                         )
+                        Text(
+                            "若修改密码，密码为6~20位，必须包含数字和字母",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(start = 4.dp, top = 4.dp)
+                        )
 
                         Spacer(Modifier.height(8.dp))
                         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
@@ -226,6 +234,13 @@ fun AdminUserDetailScreen(
                                     if (phoneNumber.isNotBlank() && (phoneNumber.length != 11 || !phoneNumber.all { it.isDigit() })) {
                                         scope.launch { snackbarHostState.showSnackbar("手机号格式不正确，请输入11位数字") }
                                         return@Button
+                                    }
+                                    if (userPassword.isNotBlank()) {
+                                        val passwordRegex = Regex("^(?=.*[a-zA-Z])(?=.*\\d).{6,20}$")
+                                        if (!passwordRegex.matches(userPassword)) {
+                                            scope.launch { snackbarHostState.showSnackbar("密码格式为6~20位，必须包含数字和字母") }
+                                            return@Button
+                                        }
                                     }
                                     showConfirmDialog = true
                                 },

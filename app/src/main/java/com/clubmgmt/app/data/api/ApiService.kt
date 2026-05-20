@@ -82,6 +82,10 @@ interface ApiService {
     @GET("api/club/managed")
     suspend fun getManagedClubs(): Response<ClubListResponse>
 
+    /** 查看当前用户提交的社团成立申请（待审核/未通过/已通过） */
+    @GET("api/club/my-applications")
+    suspend fun getMyClubCreations(): Response<ClubListResponse>
+
     // ======================== 社团成员 ========================
 
     /** 提交入社申请 */

@@ -295,6 +295,7 @@ data class UserRegistrationData(
     @SerializedName("title") val title: String,
     @SerializedName("content") val content: String? = null,
     @SerializedName("reviewState") val reviewState: String? = null,
+    @SerializedName("activityState") val activityState: String? = null,
     @SerializedName("publishTime") val publishTime: String? = null,
     @SerializedName("clubId") val clubId: String? = null,
     @SerializedName("clubName") val clubName: String? = null
