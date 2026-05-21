@@ -2,6 +2,8 @@ package com.clubmgmt.app.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -367,7 +369,7 @@ fun ProfileScreen(
                 when (activeTab) {
                     0 -> { // 我加入的社团（已通过）
                         val approvedApps = myApplications?.filter {
-                            it.reviewState == "approved" || it.reviewState == "已通过"
+                            it.reviewState == "通过"
                         }
                         if (isLoadingApps) {
                             item {
@@ -461,7 +463,7 @@ fun ProfileScreen(
 
                     2 -> { // 我报名的活动（已通过）
                         val approvedRegs = myRegistrations?.filter {
-                            it.reviewState == "approved" || it.reviewState == "已通过"
+                            it.reviewState == "审核通过"
                         }
                         if (isLoadingRegs) {
                             item {
@@ -490,13 +492,19 @@ fun ProfileScreen(
                                 ) {
                                     Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
                                         Column(Modifier.weight(1f)) {
-                                            Text(
-                                                reg.title,
-                                                style = MaterialTheme.typography.titleMedium,
-                                                fontWeight = FontWeight.Bold
-                                            )
-                                            Spacer(Modifier.height(4.dp))
-                                            StatusBadge(reg.reviewState.orEmpty())
+                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                Text(
+                                                    reg.title,
+                                                    style = MaterialTheme.typography.titleMedium,
+                                                    fontWeight = FontWeight.Bold,
+                                                    maxLines = 1,
+                                                    overflow = TextOverflow.Ellipsis,
+                                                    modifier = Modifier.weight(1f, fill = false)
+                                                )
+                                                Spacer(Modifier.width(8.dp))
+                                                ActivityStateBadge(reg.activityState.orEmpty())
+                                                StatusBadge(reg.reviewState.orEmpty())
+                                            }
                                             if (reg.clubName != null) {
                                                 Spacer(Modifier.height(2.dp))
                                                 Text(
@@ -540,7 +548,6 @@ fun ProfileScreen(
                     3 -> { // 我发布的活动（已发布/已结束）
                         val publishedActs = myActivities?.filter {
                             it.activityState == "已发布" || it.activityState == "已结束"
-                                    || it.activityState == "approved" || it.activityState == "ended"
                         }
                         if (isLoadingMyActs) {
                             item {
@@ -649,7 +656,9 @@ fun ProfileScreen(
                         // 子Tab选择器
                         item {
                             Row(
-                                modifier = Modifier.fillMaxWidth(),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .horizontalScroll(rememberScrollState()),
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
                                 appSubTabs.forEachIndexed { index, title ->
@@ -666,8 +675,7 @@ fun ProfileScreen(
                         when (appSubTab) {
                             0 -> { // 成立社团申请
                                 val pendingCreations = myClubCreations?.filter {
-                                    it.clubState == "pending" || it.clubState == "待审核"
-                                            || it.clubState == "rejected" || it.clubState == "未通过"
+                                    it.clubState == "待审核" || it.clubState == "未通过"
                                 }
                                 if (pendingCreations.isNullOrEmpty()) {
                                     item {
@@ -712,8 +720,7 @@ fun ProfileScreen(
                             }
                             1 -> { // 发布活动申请
                                 val pendingActs = myActivities?.filter {
-                                    it.activityState == "pending" || it.activityState == "待审核"
-                                            || it.activityState == "rejected" || it.activityState == "未通过"
+                                    it.activityState == "待审核" || it.activityState == "未通过"
                                 }
                                 if (pendingActs.isNullOrEmpty()) {
                                     item {
@@ -745,8 +752,7 @@ fun ProfileScreen(
                             }
                             2 -> { // 加入社团申请
                                 val pendingApps = myApplications?.filter {
-                                    it.reviewState == "pending" || it.reviewState == "待审核"
-                                            || it.reviewState == "rejected" || it.reviewState == "未通过"
+                                    it.reviewState == "待审核" || it.reviewState == "未通过"
                                 }
                                 if (pendingApps.isNullOrEmpty()) {
                                     item {
@@ -791,8 +797,7 @@ fun ProfileScreen(
                             }
                             3 -> { // 报名活动申请
                                 val pendingRegs = myRegistrations?.filter {
-                                    it.reviewState == "pending" || it.reviewState == "待审核"
-                                            || it.reviewState == "rejected" || it.reviewState == "未通过"
+                                    it.reviewState == "审核中" || it.reviewState == "审核失败"
                                 }
                                 if (pendingRegs.isNullOrEmpty()) {
                                     item {
@@ -833,6 +838,31 @@ fun ProfileScreen(
                                                         StatusBadge(reg.reviewState.orEmpty())
                                                     }
                                                 }
+                                                if (reg.activityState != "已结束") {
+                                                    OutlinedButton(
+                                                        onClick = {
+                                                            scope.launch {
+                                                                try {
+                                                                    val resp = RetrofitClient.instance.cancelRegistration(
+                                                                        CancelRegistrationRequest(registrationID = reg.registrationId ?: "")
+                                                                    )
+                                                                    if (resp.isSuccessful) {
+                                                                        myRegistrations = myRegistrations?.filter { it.registrationId != reg.registrationId }
+                                                                        snackbarHostState.showSnackbar("已取消报名")
+                                                                    } else {
+                                                                        snackbarHostState.showSnackbar("取消失败")
+                                                                    }
+                                                                } catch (_: Exception) {
+                                                                    snackbarHostState.showSnackbar("网络错误")
+                                                                }
+                                                            }
+                                                        },
+                                                        shape = RoundedCornerShape(8.dp),
+                                                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFEF4444))
+                                                    ) {
+                                                        Text("取消报名")
+                                                    }
+                                                }
                                             }
                                         }
                                     }
@@ -850,9 +880,33 @@ fun ProfileScreen(
 @Composable
 private fun StatusBadge(state: String) {
     val (label, color) = when (state) {
-        "approved", "已通过", "已发布" -> "已通过" to Color(0xFF22C55E)
-        "pending", "待审核" -> "审核中" to Color(0xFFF59E0B)
-        "rejected", "未通过" -> "已拒绝" to Color(0xFFEF4444)
+        "approved", "已通过", "已发布", "通过", "审核通过" -> "已通过" to Color(0xFF22C55E)
+        "pending", "待审核", "审核中" -> "审核中" to Color(0xFFF59E0B)
+        "rejected", "未通过", "审核失败" -> "已拒绝" to Color(0xFFEF4444)
+        else -> state to MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+    }
+    Surface(
+        shape = RoundedCornerShape(4.dp),
+        color = color.copy(alpha = 0.15f)
+    ) {
+        Text(
+            label,
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+            color = color,
+            style = MaterialTheme.typography.labelSmall,
+            fontWeight = FontWeight.Bold
+        )
+    }
+}
+
+/** 活动状态标签 */
+@Composable
+private fun ActivityStateBadge(state: String) {
+    val (label, color) = when (state) {
+        "已发布" -> "已发布" to Color(0xFF22C55E)
+        "已结束" -> "已结束" to Color(0xFF6B7280)
+        "待审核" -> "审核中" to Color(0xFFF59E0B)
+        "未通过" -> "已拒绝" to Color(0xFFEF4444)
         else -> state to MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
     }
     Surface(

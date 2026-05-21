@@ -316,14 +316,7 @@ fun LoginScreen(
                         imeAction = ImeAction.Done
                     )
                 )
-                Text(
-                    "密码为6~20位，必须包含数字和字母",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 4.dp, top = 4.dp)
-                )
+
             }
 
             // 验证码登录表单

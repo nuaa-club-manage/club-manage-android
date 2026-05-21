@@ -152,7 +152,12 @@ fun AdminClubDetailScreen(
                                             try {
                                                 val resp = RetrofitClient.instance.setClubManager(SetClubManagerRequest(clubId, m.userId, false))
                                                 if (resp.isSuccessful) {
-                                                    loadData()
+                                                    val body = resp.body()
+                                                    if (body != null && body.code == 200) {
+                                                        loadData()
+                                                    } else {
+                                                        snackbarHostState.showSnackbar(body?.message ?: "取消管理员失败")
+                                                    }
                                                 } else {
                                                     val msg = try {
                                                         val json = org.json.JSONObject(resp.errorBody()?.string() ?: "")

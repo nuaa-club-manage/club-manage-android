@@ -165,11 +165,8 @@ fun ActivityDetailScreen(
                 }
             }
 
-            // 若是自己发布的活动则不显示报名/取消按钮
-            val isMyActivity = safeActivity.userId == com.clubmgmt.app.data.SessionManager.userId
-
             val isAdmin = com.clubmgmt.app.data.SessionManager.userRole == "ADMIN"
-            if (showRegistration && !isMyActivity && !isAdmin) {
+            if (showRegistration && !isAdmin && safeActivity.activityState != "已结束") {
             // 报名/取消报名按钮
             if (registeredId != null) {
                 // 已报名 → 显示取消报名
