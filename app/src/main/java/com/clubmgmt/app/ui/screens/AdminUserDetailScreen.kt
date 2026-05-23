@@ -98,7 +98,7 @@ fun AdminUserDetailScreen(
                                     gender = gender,
                                     degree = degree,
                                     school = school,
-                                    userPassword = userPassword
+                                    userPassword = userPassword.ifBlank { null }
                                 )
                             )
                             if (resp.isSuccessful) {

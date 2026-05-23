@@ -166,7 +166,7 @@ fun ActivityDetailScreen(
             }
 
             val isAdmin = com.clubmgmt.app.data.SessionManager.userRole == "ADMIN"
-            if (showRegistration && !isAdmin && safeActivity.activityState != "已结束") {
+            if (showRegistration && !isAdmin && safeActivity.activityState != "已结束" && safeActivity.activityState != "未通过") {
             // 报名/取消报名按钮
             if (registeredId != null) {
                 // 已报名 → 显示取消报名
